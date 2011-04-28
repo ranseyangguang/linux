@@ -207,6 +207,9 @@
 /* Xilinx PSS UART */
 #define PORT_XUARTPS	98
 
+/* ARC Angel4/ML509 UART */
+#define PORT_ARC        99
+
 #ifdef __KERNEL__
 
 #include <linux/compiler.h>
