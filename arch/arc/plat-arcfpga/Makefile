@@ -8,3 +8,4 @@
 
 obj-y += platform.o
 
+obj-$(CONFIG_ARC_CPU_700_SMP_EXTN)	= smp.o
