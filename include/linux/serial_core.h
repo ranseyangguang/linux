@@ -213,6 +213,9 @@
 /* Energy Micro efm32 SoC */
 #define PORT_EFMUART   100
 
+/* ARC (Synopsys) on-chip UART */
+#define PORT_ARC       101
+
 #ifdef __KERNEL__
 
 #include <linux/compiler.h>
