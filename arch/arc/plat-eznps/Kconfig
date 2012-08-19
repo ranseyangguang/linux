@@ -1,0 +1,48 @@
+# For a description of the syntax of this configuration file,
+# see Documentation/kbuild/kconfig-language.txt.
+
+config ARC_PLAT_EZNPS
+	bool "\"EZchip\" ARC dev platform"
+	select CPU_BIG_ENDIAN
+	select ARC_HAS_COH_CACHES if SMP
+	select CMDLINE_UBOOT
+	select EZNPS_NET if ETHERNET
+	help
+	  Support for ARC development platforms, provided by EZchip.
+	  These are based on FPGA or nSIM. e.g.
+	  - HE0
+	  - HE1
+	  - MetaWare nSIM
+
+if ARC_PLAT_EZNPS
+
+config NPS_BOARD_HE0
+	bool "NPS HE0"
+	help
+	  NPS HE0 (Hardware Emulator)
+	  This is EZchip Reference Platform.
+
+config NPS_BOARD_HE1
+	bool "NPS HE1"
+	help
+	  NPS HE1 (Hardware Emulator).
+	  This is EZchip Reference Platform.
+
+config NPS_NSIM_VIRT_PERIP
+	bool "NPS NSIM"
+	help
+	  NPS Linux can run on ARC simulation.
+	  Base upon nSIM as ARC core.
+
+config NPS_SMP_EXTN
+	bool "ARC SMP Extensions"
+	default y
+	select ARC_HAS_IPI
+	help
+	  SMP Extensions to ARC700.
+	  The SMP extensions include:
+	  -IDU (Interrupt Distribution Unit)
+	  It doesn't provide coherent Caches and/or Atomic Ops (LLOCK/SCOND)
+	  We assume only instruction cache coherency.
+
+endif
