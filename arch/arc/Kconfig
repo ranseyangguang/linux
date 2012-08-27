@@ -111,6 +111,11 @@ config ARC_PLAT_FPGA_LEGACY
 	  - ML509
 	  - MetaWare ISS
 
+config ARC_PLAT_HAPS51
+	bool "Extendable ARC HAPS51 FPGA platform"
+	help
+	  Various Synopsys subsystem platforms are supported from within.
+
 #New platform adds here
 endchoice
 
@@ -354,6 +359,8 @@ endmenu   # "ARC CPU Configuration"
 menu "Platform Board Configuration"
 
 source "arch/arc/plat-arcfpga/Kconfig"
+source "arch/arc/plat-haps51/Kconfig"
+
 #New platform adds here
 
 config ARC_PLAT_CLK

@@ -10,9 +10,11 @@ UTS_MACHINE := arc
 
 KBUILD_DEFCONFIG := fpga_defconfig
 
-# For ARC FPGA Platforms
+# Platform directory name (plat-...).
+# This list is sorted alphanumerically by CONFIG_* macro name.
 platform-$(CONFIG_ARC_PLAT_FPGA_LEGACY)	:= arcfpga
-#New platform adds here
+platform-$(CONFIG_ARC_PLAT_HAPS51)	:= haps51
+# !! A new platform should be added here.
 
 PLATFORM := $(platform-y)
 export PLATFORM
