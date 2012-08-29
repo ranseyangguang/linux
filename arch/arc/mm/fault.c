@@ -70,6 +70,8 @@ static int handle_vmalloc_fault(struct mm_struct *mm, unsigned long address)
 		goto bad_area;
 
 	set_pmd(pmd, *pmd_k);
+
+	/* XXX: create the TLB entry here */
 	return 0;
 
 bad_area:
@@ -96,8 +98,10 @@ asmlinkage int do_page_fault(struct pt_regs *regs, int write,
 	 */
 	if (address >= VMALLOC_START && address <= VMALLOC_END) {
 		ret = handle_vmalloc_fault(mm, address);
-		if (ret)
+		if (unlikely(ret))
 			goto bad_area_nosemaphore;
+		else
+			return 0;
 	}
 
 	info.si_code = SEGV_MAPERR;
