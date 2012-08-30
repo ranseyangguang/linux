@@ -20,4 +20,7 @@
 #define DW_UART_BASE3		0xC0006000
 #define UART_REG_SZ			0x00002000
 
+#define GMAC_BASE			0xE2010000
+#define GMAC_REG_SZ			0x00004000
+
 #endif

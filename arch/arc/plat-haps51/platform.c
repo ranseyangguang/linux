@@ -56,9 +56,64 @@ static struct platform_device dw_uart_device = {
 
 /* ------------------------------------------------------------------------- */
 
+#ifdef CONFIG_STMMAC_ETH
+#include <linux/stmmac.h>
+#include <linux/phy.h>
+
+static int stphy_reset(void *bus)
+{
+	return 1;
+}
+
+static struct stmmac_mdio_bus_data mdio_bus_data = {
+	.bus_id = 1,
+	.phy_reset = &stphy_reset,
+	.phy_mask = 1,
+};
+
+static struct resource stmmac_eth_resources[] = {
+	{
+		.name = "macirq",
+		.start = GMAC_IRQ,
+		.end = GMAC_IRQ,
+		.flags = IORESOURCE_IRQ,
+	}, {
+		.name = "stmmac-regs",
+		.start = GMAC_BASE,
+		.end = GMAC_BASE + GMAC_REG_SZ,
+		.flags = IORESOURCE_MEM,
+	 },
+};
+
+static struct plat_stmmacenet_data mac_private_data = {
+	.bus_id = 1,
+	.phy_addr = 1,
+	.interface = PHY_INTERFACE_MODE_MII,
+	.mdio_bus_data = &mdio_bus_data,
+	.pbl = 32,
+	.clk_csr = 0,
+	.has_gmac = 1,
+	.enh_desc = 0,
+};
+
+static struct platform_device stmmac_eth_device = {
+	.name = "stmmaceth",
+	.resource = stmmac_eth_resources,
+	.num_resources = ARRAY_SIZE(stmmac_eth_resources),
+	.dev = {
+		.platform_data = &mac_private_data,
+		.p = 0,
+	},
+};
+#endif /* CONFIG_STMMAC_ETH */
+
+/* ------------------------------------------------------------------------- */
+
 static struct platform_device *dw_platform_devices[] __initdata = {
 	&dw_uart_device,
-
+#ifdef CONFIG_STMMAC_ETH
+	&stmmac_eth_device,
+#endif
 };
 
 int __init dw_platform_init(void)
