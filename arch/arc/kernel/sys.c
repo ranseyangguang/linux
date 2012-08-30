@@ -9,6 +9,7 @@
 #define sys_clone	sys_clone_wrapper
 #define sys_fork	sys_fork_wrapper
 #define sys_vfork	sys_vfork_wrapper
+#define sys_munmap	sys_arc_munmap
 
 #undef __SYSCALL
 #define __SYSCALL(nr, call) [nr] = (call),

@@ -20,6 +20,7 @@ int sys_clone_wrapper(int, int, int, int, int);
 int sys_fork_wrapper(void);
 int sys_vfork_wrapper(void);
 int sys_cacheflush(uint32_t start, uint32_t end, uint32_t flags);
+int sys_arc_munmap(unsigned long addr, size_t len);
 
 #include <asm-generic/syscalls.h>
 
