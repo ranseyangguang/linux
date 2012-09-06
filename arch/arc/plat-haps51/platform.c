@@ -20,20 +20,20 @@
 
 /* ------------------------------------------------------------------------- */
 
-#define ARC_UART1_CLK	12500000  /* 1/4th of core clock */
+#define ARC_UART1_CLK 12500000 /* 1/4th of core clock */
 
-#define PORT(_base, _irq)                   \
-{                                           \
-	.iobase     = _base,                    \
-	.membase    = (void __iomem *) _base,   \
-	.mapbase    = (resource_size_t) _base,  \
-	.irq        = _irq,                     \
-	.irqflags   = 0    ,                    \
-	.uartclk    = ARC_UART1_CLK,            \
-	.regshift   = 2,                        \
-	.iotype     = UPIO_MEM32,               \
-	.flags      = UPF_SKIP_TEST,            \
-	.type       = PORT_16550A               \
+#define PORT(_base, _irq)                \
+{                                        \
+	.iobase   = _base,                   \
+	.membase  = (void __iomem *) _base,  \
+	.mapbase  = (resource_size_t) _base, \
+	.irq      = _irq,                    \
+	.irqflags = 0    ,                   \
+	.uartclk  = ARC_UART1_CLK,           \
+	.regshift = 2,                       \
+	.iotype   = UPIO_MEM32,              \
+	.flags    = UPF_SKIP_TEST,           \
+	.type     = PORT_16550A              \
 }
 
 static struct plat_serial8250_port dw_uart_data[] = {
@@ -42,16 +42,14 @@ static struct plat_serial8250_port dw_uart_data[] = {
 	PORT(DW_UART_BASE2, UART2_IRQ),
 	PORT(DW_UART_BASE3, UART3_IRQ),
 	{},
-
 };
 
 static struct platform_device dw_uart_device = {
 	.name = "serial8250",
-	.id = PLAT8250_DEV_PLATFORM,
+	.id   = PLAT8250_DEV_PLATFORM,
 	.dev = {
 		.platform_data = dw_uart_data,
 	},
-
 };
 
 /* ------------------------------------------------------------------------- */
@@ -66,43 +64,44 @@ static int stphy_reset(void *bus)
 }
 
 static struct stmmac_mdio_bus_data mdio_bus_data = {
-	.bus_id = 1,
+	.bus_id    = 1,
 	.phy_reset = &stphy_reset,
-	.phy_mask = 1,
+	.phy_mask  = 1,
 };
 
 static struct resource stmmac_eth_resources[] = {
-	{
-		.name = "macirq",
-		.start = GMAC_IRQ,
-		.end = GMAC_IRQ,
-		.flags = IORESOURCE_IRQ,
-	}, {
-		.name = "stmmac-regs",
+	[0] = {
+		.name  = "stmmac-regs",
 		.start = GMAC_BASE,
-		.end = GMAC_BASE + GMAC_REG_SZ,
+		.end   = GMAC_BASE + GMAC_REG_SZ,
 		.flags = IORESOURCE_MEM,
+	},
+	[1] = {
+		.name  = "macirq",
+		.start = GMAC_IRQ,
+		.end   = GMAC_IRQ,
+		.flags = IORESOURCE_IRQ,
 	 },
 };
 
 static struct plat_stmmacenet_data mac_private_data = {
-	.bus_id = 1,
-	.phy_addr = 1,
-	.interface = PHY_INTERFACE_MODE_MII,
+	.bus_id        = 1,
+	.phy_addr      = 1,
+	.interface     = PHY_INTERFACE_MODE_MII,
 	.mdio_bus_data = &mdio_bus_data,
-	.pbl = 32,
-	.clk_csr = 0,
-	.has_gmac = 1,
-	.enh_desc = 0,
+	.pbl           = 32,
+	.clk_csr       = 0,
+	.has_gmac      = 1,
+	.enh_desc      = 0,
 };
 
 static struct platform_device stmmac_eth_device = {
-	.name = "stmmaceth",
-	.resource = stmmac_eth_resources,
+	.name          = "stmmaceth",
+	.resource      = stmmac_eth_resources,
 	.num_resources = ARRAY_SIZE(stmmac_eth_resources),
 	.dev = {
 		.platform_data = &mac_private_data,
-		.p = 0,
+		.p             = 0,
 	},
 };
 #endif /* CONFIG_STMMAC_ETH */
