@@ -9,6 +9,9 @@
 #include <linux/kernel.h>
 #include <linux/mm.h>
 #include <linux/bootmem.h>
+#ifdef CONFIG_BLK_DEV_INITRD
+#include <linux/initrd.h>
+#endif
 #ifdef CONFIG_BLOCK_DEV_RAM
 #include <linux/blk.h>
 #endif
@@ -37,6 +40,31 @@ static int __init setup_mem_sz(char *str)
 	return 0;
 }
 early_param("mem", setup_mem_sz);
+
+static int __init rd_start_early(char *p)
+{
+	unsigned long start = memparse(p, &p);
+
+	initrd_start = start;
+	initrd_end += start;
+	return 0;
+}
+early_param("rd_start", rd_start_early);
+
+static int __init rd_size_early(char *p)
+{
+	initrd_end += memparse(p, &p);
+	return 0;
+}
+early_param("rd_size", rd_size_early);
+
+void __init reserve_initrd_mem(void)
+{
+	unsigned long size = initrd_end - initrd_start;
+
+	if (size > 0)
+		reserve_bootmem(__pa(initrd_start), size, BOOTMEM_DEFAULT);
+}
 
 void __init early_init_dt_add_memory_arch(u64 base, u64 size)
 {
@@ -95,6 +123,10 @@ void __init setup_arch_memory(void)
 	 */
 	alloc_start = kernel_img_end + bootmap_sz;
 	free_bootmem(alloc_start, end_mem - alloc_start);
+
+#ifdef CONFIG_BLK_DEV_INITRD
+	reserve_initrd_mem();
+#endif
 
 	memset(zones_size, 0, sizeof(zones_size));
 	zones_size[ZONE_NORMAL] = num_physpages;
@@ -187,6 +219,7 @@ void __init free_initrd_mem(unsigned long start, unsigned long end)
 	free_init_pages("initrd memory", start, end);
 }
 #endif
+
 
 #ifdef CONFIG_OF_FLATTREE
 void __init early_init_dt_setup_initrd_arch(unsigned long start,
