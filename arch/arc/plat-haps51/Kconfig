@@ -18,4 +18,13 @@ config ARC_HAPS51_BOARD_BASIC
 
 endchoice
 
+config DW_INTC
+	bool "2nd level DesignWare interrupt controller"
+	default n
+
+config DW_INTC_NR
+	hex "Connected to interrupt line 12 of the ARC"
+	default "0xc"
+	depends on DW_INTC
+
 endif

@@ -44,7 +44,7 @@
 #define GMAC_IRQ		17
 /* INT 18..31 reserved for application use */
 
-/* DesignWare interrupt controller */
+/* DesignWare interrupt controller Handled Interrupts */
 #define UART1_IRQ		(OFFSET_DW_INT_CTRL + 0)
 #define UART2_IRQ		(OFFSET_DW_INT_CTRL + 1)
 #define UART3_IRQ		(OFFSET_DW_INT_CTRL + 2)
