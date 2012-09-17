@@ -19,11 +19,15 @@ config ARC_HAPS51_BOARD_BASIC
 endchoice
 
 config DW_INTC
-	bool "2nd level DesignWare interrupt controller"
+	bool "Off-chip Synopsys DW Interrupt Controller"
 	default n
+	help
+	  This is the off-chip (2nd level) Interrupt Controller which can
+	  be used to cascade external interrupts. It provides lot of
+	  fancy features such as IRQ priority, Masking, Disabling....
 
-config DW_INTC_NR
-	hex "Connected to interrupt line 12 of the ARC"
+config DW_INTC_IRQ
+	hex "ARC CPU IRQ to which controller is attached"
 	default "0xc"
 	depends on DW_INTC
 

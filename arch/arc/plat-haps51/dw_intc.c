@@ -9,77 +9,64 @@
 
 #include <linux/irq.h>
 #include <linux/interrupt.h>
-
 #include <plat/dw_intc.h>
 #include <plat/irq.h>
 #include <plat/memmap.h>
 
 
-struct irqaction      node;
-struct dw_int_struct *intc_ptr = (void *)DW_INTC_BASE;
+struct dw_intc_regmap *intc = (struct dw_intc_regmap *)DW_INTC_BASE;
 
-/* ------------------------------------------------------------------------- */
-
-void  dw_intc_init(void)
+void __init dw_intc_init(void)
 {
 	int ret;
 
-	printk(KERN_INFO " init DW_INTC with (%d) interrupts\n",
-		NR_IRQS - OFFSET_DW_INT_CTRL);
+	pr_info("DW_INTC: CPU IRQ #[%x], (%d) Device IRQs\n",
+		CONFIG_DW_INTC_IRQ, DW_INTC_IRQS_NUM);
 
-	/* set DW interrupt handler in default state */
-	intc_ptr->dw_int_irq_en_l = 0x0;      /* disable all interrupts */
-	intc_ptr->dw_int_irq_intmask_l = 0x0; /* no interrupts masked out */
-	intc_ptr->dw_int_irq_en_h = 0x0;      /* disable all interrupts */
-	intc_ptr->dw_int_irq_intmask_h = 0x0; /* no interrupts masked out */
-	intc_ptr->dw_int_plevel = 0x0;        /* set intlevel to 0 */
+	/* default state */
+	intc->int_enb_l = 0x0;		/* disable all interrupts */
+	intc->int_enb_h = 0x0;
+	intc->mask_ctl_l = 0x0;		/* no interrupts masked out */
+	intc->mask_ctl_h = 0x0;
+	intc->prio_level = 0x0;		/* All same priority by default */
 
-	/* install the DW interrupt handler */
-	node.handler = (void *)dw_intc_do_handle_irq;
-	node.flags = IRQ_FLG_LOCK;
-	node.dev_id = NULL;
-	node.name = "dw_intc";
-	node.next = NULL;
-
-	/* request an irq for the kernel list */
-	ret = request_irq(CONFIG_DW_INTC_NR,
-		node.handler, node.flags, node.name, node.dev_id);
+	/* Hookup the casceded interrupt controller to a CPU IRQ */
+	ret = request_irq(CONFIG_DW_INTC_IRQ, dw_intc_do_handle_irq, 0,
+			  DW_INTC_NM, NULL);
 	if (ret)
-		panic("Unable to attach to chained DW Interrupt Controller.\n");
+		panic("DW_INTC: request_irq failed\n");
 }
 
-void dw_intc_enable_int(int vector)
+void dw_intc_enable_int(int irq)
 {
-	unsigned long reg;
+	unsigned long val;
 
-	/* set controller's interrupt enable register */
-	reg = intc_ptr->dw_int_irq_en_l;
-	reg |= (1 << vector);
-	intc_ptr->dw_int_irq_en_l = reg;
+	val = intc->int_enb_l;
+	val |= (1 << irq);
+	intc->int_enb_l = val;
 }
 
-void dw_intc_disable_int(int vector)
+void dw_intc_disable_int(int irq)
 {
-	unsigned long reg;
+	unsigned long val;
 
-	/* disable controller interrupt to the CPU */
-	reg = intc_ptr->dw_int_irq_en_l;
-	reg &= ~(1 << vector);
-	intc_ptr->dw_int_irq_en_l = reg;
+	val = intc->int_enb_l;
+	val &= ~(1 << irq);
+	intc->int_enb_l = val;
 }
 
-void dw_intc_do_handle_irq(void)
+irqreturn_t dw_intc_do_handle_irq(int irq, void *arg)
 {
 	unsigned long intsrc;
 	int intnum;
 
-	intsrc = intc_ptr->dw_int_irq_int_final_status_h;
+	intsrc = intc->int_status_final_h;
 	intnum = OFFSET_DW_INT_CTRL;
 
 	while (intnum != 0)	{
 		/* hunt for the real interrupt number */
 		if (intnum == OFFSET_DW_INT_CTRL)
-			intsrc = intc_ptr->dw_int_irq_int_final_status_l;
+			intsrc = intc->int_status_final_l;
 
 		if (intsrc & 0x80000000)
 			break;
@@ -89,5 +76,5 @@ void dw_intc_do_handle_irq(void)
 	}
 
 	/* when found handle the interrupt */
-	generic_handle_irq(intnum + OFFSET_DW_INT_CTRL - 1);
+	return generic_handle_irq(intnum + OFFSET_DW_INT_CTRL - 1);
 }

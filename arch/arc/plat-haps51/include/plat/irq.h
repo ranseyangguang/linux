@@ -21,16 +21,7 @@
  * line 3 of the DesignWare interrupt controller will have interrupt number 35.
  */
 
-#define OFFSET_DW_INT_CTRL	32
-
-#define NR_IRQS			(OFFSET_DW_INT_CTRL + 64)
-
 /* Internal interrupt controller */
-#define RESET_IRQ		0
-#define MEMERR_IRQ		1
-#define INSTRERR_IRQ	2
-#define TIMER0_IRQ		3
-#define TIMER1_IRQ		4
 #define USBH_IRQ		5
 #define USBD_IRQ		6
 #define DSI_IRQ			7
@@ -38,18 +29,33 @@
 #define SDIO_IRQ		9
 #define DMAC_IRQ		10
 #define UART0_IRQ		11
-#define INTC_IRQ		12
-/* INT 13..15 reserved for internal purposes */
+#define INTC_IRQ		12	/* Casceded 2nd level Intr Controller */
 #define WDT_IRQ			16
 #define GMAC_IRQ		17
-/* INT 18..31 reserved for application use */
 
 /* DesignWare interrupt controller Handled Interrupts */
-#define UART1_IRQ		(OFFSET_DW_INT_CTRL + 0)
-#define UART2_IRQ		(OFFSET_DW_INT_CTRL + 1)
-#define UART3_IRQ		(OFFSET_DW_INT_CTRL + 2)
+#ifdef CONFIG_DW_INTC
 
-/* Defines for generic ARC code usage */
-#define TIMER0_INT		TIMER0_IRQ
+#define DW_INTC_IRQS_START	32
+#define DW_INTC_IRQS_NUM	32	/* Making this 64 needs lot more work */
+
+#define UART1_IRQ		(DW_INTC_IRQS_START + 0)
+#define UART2_IRQ		(DW_INTC_IRQS_START + 1)
+#define UART3_IRQ		(DW_INTC_IRQS_START + 2)
+
+#define NR_IRQS			(DW_INTC_IRQS_START + 32)
+
+/* Is this IRQ fed by the cacsceded controller */
+#define IS_EXTERNAL_IRQ(g_irq)	(g_irq >= DW_INTC_IRQS_START)
+
+/* Global irqnum namespace [32..NR_IRQs] to controller private [0..63] */
+#define TO_INTC_IRQ(g_irq)	(g_irq - DW_INTC_IRQS_START)
+
+#else	/* ! CONFIG_DW_INTC */
+
+#define IS_EXTERNAL_IRQ(g_irq)	(0)
+#define NR_IRQS			32
+
+#endif	/* CONFIG_DW_INTC */
 
 #endif
