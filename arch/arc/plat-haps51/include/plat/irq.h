@@ -51,6 +51,8 @@
 /* Global irqnum namespace [32..NR_IRQs] to controller private [0..63] */
 #define TO_INTC_IRQ(g_irq)	(g_irq - DW_INTC_IRQS_START)
 
+#define TO_SYS_IRQ(intc_irq)	(intc_irq + DW_INTC_IRQS_START)
+
 #else	/* ! CONFIG_DW_INTC */
 
 #define IS_EXTERNAL_IRQ(g_irq)	(0)

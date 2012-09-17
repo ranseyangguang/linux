@@ -38,9 +38,11 @@
 
 static struct plat_serial8250_port dw_uart_data[] = {
 	PORT(DW_UART_BASE0, UART0_IRQ),
+#ifdef CONFIG_DW_INTC
 	PORT(DW_UART_BASE1, UART1_IRQ),
 	PORT(DW_UART_BASE2, UART2_IRQ),
 	PORT(DW_UART_BASE3, UART3_IRQ),
+#endif
 	{},
 };
 

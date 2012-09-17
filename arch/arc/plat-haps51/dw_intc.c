@@ -55,26 +55,21 @@ void dw_intc_disable_int(int irq)
 	intc->int_enb_l = val;
 }
 
+/*
+ * Vanilla ISR [Non "vector-mode"]
+ */
 irqreturn_t dw_intc_do_handle_irq(int irq, void *arg)
 {
 	unsigned long intsrc;
 	int intnum;
+	int rc = 0;
 
-	intsrc = intc->int_status_final_h;
-	intnum = OFFSET_DW_INT_CTRL;
+	intsrc = intc->int_status_final_l;
 
-	while (intnum != 0)	{
-		/* hunt for the real interrupt number */
-		if (intnum == OFFSET_DW_INT_CTRL)
-			intsrc = intc->int_status_final_l;
+	for (intnum = find_first_bit(&intsrc, DW_INTC_IRQS_NUM);
+	     intnum < DW_INTC_IRQS_NUM;
+	     intnum = find_next_bit(&intsrc, DW_INTC_IRQS_NUM, intnum))
+		rc |= generic_handle_irq(TO_SYS_IRQ(intnum));
 
-		if (intsrc & 0x80000000)
-			break;
-
-		intnum--;
-		intsrc = intsrc << 1;
-	}
-
-	/* when found handle the interrupt */
-	return generic_handle_irq(intnum + OFFSET_DW_INT_CTRL - 1);
+	return rc;
 }
