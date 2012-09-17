@@ -9,10 +9,13 @@
 
 #include <linux/irq.h>
 #include <linux/interrupt.h>
+#include <linux/io.h>
 #include <plat/dw_intc.h>
 #include <plat/irq.h>
 #include <plat/memmap.h>
 
+#define DW_INTC_READ(reg)		readl((u32 *)&(reg))
+#define DW_INTC_WRITE(reg, val)		writel((val), (u32 *)&(reg))
 
 struct dw_intc_regmap *intc = (struct dw_intc_regmap *)DW_INTC_BASE;
 
@@ -24,11 +27,11 @@ void __init dw_intc_init(void)
 		CONFIG_DW_INTC_IRQ, DW_INTC_IRQS_NUM);
 
 	/* default state */
-	intc->int_enb_l = 0x0;		/* disable all interrupts */
-	intc->int_enb_h = 0x0;
-	intc->mask_ctl_l = 0x0;		/* no interrupts masked out */
-	intc->mask_ctl_h = 0x0;
-	intc->prio_level = 0x0;		/* All same priority by default */
+	DW_INTC_WRITE(intc->int_enb_l, 0);	/* disable all interrupts */
+	DW_INTC_WRITE(intc->int_enb_h, 0);
+	DW_INTC_WRITE(intc->mask_ctl_l, 0);	/* no interrupts masked out */
+	DW_INTC_WRITE(intc->mask_ctl_h, 0);
+	DW_INTC_WRITE(intc->prio_level, 0);	/* same priority by default */
 
 	/* Hookup the casceded interrupt controller to a CPU IRQ */
 	ret = request_irq(CONFIG_DW_INTC_IRQ, dw_intc_do_handle_irq, 0,
@@ -41,18 +44,16 @@ void dw_intc_enable_int(int irq)
 {
 	unsigned long val;
 
-	val = intc->int_enb_l;
-	val |= (1 << irq);
-	intc->int_enb_l = val;
+	val = DW_INTC_READ(intc->int_enb_l);
+	DW_INTC_WRITE(intc->int_enb_l, val | (1 << irq));
 }
 
 void dw_intc_disable_int(int irq)
 {
 	unsigned long val;
 
-	val = intc->int_enb_l;
-	val &= ~(1 << irq);
-	intc->int_enb_l = val;
+	val = DW_INTC_READ(intc->int_enb_l);
+	DW_INTC_WRITE(intc->int_enb_l, val & ~(1 << irq));
 }
 
 /*
@@ -64,7 +65,7 @@ irqreturn_t dw_intc_do_handle_irq(int irq, void *arg)
 	int intnum;
 	int rc = 0;
 
-	intsrc = intc->int_status_final_l;
+	intsrc = DW_INTC_READ(intc->int_status_final_l);
 
 	for (intnum = find_first_bit(&intsrc, DW_INTC_IRQS_NUM);
 	     intnum < DW_INTC_IRQS_NUM;
