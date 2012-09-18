@@ -200,7 +200,7 @@ static void resume(unsigned long ignore)
 
 int arc_vsync_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg)
 {
-	int i, res, len;
+	int i=0, res, len;
 	unsigned char c;
 
 	switch (cmd) {
@@ -293,9 +293,7 @@ int arc_vsync_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg)
 		vsync_reset();
 		return 0;
 	case ARCPGUFB_PEEK:
-		if ((display_q.buffer) && (display_q.size))
-			c = *((unsigned char *)display_q.buffer);
-		i = (int)c;
+		kfifo_peek(&display_q, &i);
 		return put_user(i, (int *)arg);
 	default:
 		return -EINVAL;

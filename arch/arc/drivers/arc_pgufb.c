@@ -31,11 +31,10 @@
 #include <linux/init.h>
 #include <linux/platform_device.h>
 #include <linux/dma-mapping.h>
-
 #include <asm/uaccess.h>
-
 #include <asm/arc_pgu.h>
 #include <asm/arc_vsync.h>
+#include <plat/memmap.h>
 
 /*--------------------------------------------------------------------------------*/
 #define DRIVER_NAME "arc_pgu"
@@ -64,7 +63,7 @@
 
 /*--------------------------------------------------------------------------------*/
 
-DECLARE_MUTEX(pgu_sem);
+DEFINE_SEMAPHORE(pgu_sem);
 
 struct arc_pgu_devdata {
 	struct fb_info info;	/* Framebuffer driver info */
