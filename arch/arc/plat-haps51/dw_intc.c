@@ -69,7 +69,7 @@ irqreturn_t dw_intc_do_handle_irq(int irq, void *arg)
 
 	for (intnum = find_first_bit(&intsrc, DW_INTC_IRQS_NUM);
 	     intnum < DW_INTC_IRQS_NUM;
-	     intnum = find_next_bit(&intsrc, DW_INTC_IRQS_NUM, intnum))
+	     intnum = find_next_bit(&intsrc, DW_INTC_IRQS_NUM, intnum+1))
 		rc |= generic_handle_irq(TO_SYS_IRQ(intnum));
 
 	return rc;
