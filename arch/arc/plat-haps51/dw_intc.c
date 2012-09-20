@@ -24,7 +24,7 @@ void __init dw_intc_init(void)
 	int ret;
 
 	pr_info("DW_INTC: CPU IRQ #[%x], (%d) Device IRQs\n",
-		CONFIG_DW_INTC_IRQ, DW_INTC_IRQS_NUM);
+		DW_INTC_IRQ, DW_INTC_NBR_OF_IRQS);
 
 	/* default state */
 	DW_INTC_WRITE(intc->int_enb_l, 0);	/* disable all interrupts */
@@ -34,7 +34,7 @@ void __init dw_intc_init(void)
 	DW_INTC_WRITE(intc->prio_level, 0);	/* same priority by default */
 
 	/* Hookup the casceded interrupt controller to a CPU IRQ */
-	ret = request_irq(CONFIG_DW_INTC_IRQ, dw_intc_do_handle_irq, 0,
+	ret = request_irq(DW_INTC_IRQ, dw_intc_do_handle_irq, 0,
 			  DW_INTC_NM, NULL);
 	if (ret)
 		panic("DW_INTC: request_irq failed\n");
@@ -67,9 +67,9 @@ irqreturn_t dw_intc_do_handle_irq(int irq, void *arg)
 
 	intsrc = DW_INTC_READ(intc->int_status_final_l);
 
-	for (intnum = find_first_bit(&intsrc, DW_INTC_IRQS_NUM);
-	     intnum < DW_INTC_IRQS_NUM;
-	     intnum = find_next_bit(&intsrc, DW_INTC_IRQS_NUM, intnum+1))
+	for (intnum = find_first_bit(&intsrc, DW_INTC_NBR_OF_IRQS);
+	     intnum < DW_INTC_NBR_OF_IRQS;
+	     intnum = find_next_bit(&intsrc, DW_INTC_NBR_OF_IRQS, intnum+1))
 		rc |= generic_handle_irq(TO_SYS_IRQ(intnum));
 
 	return rc;

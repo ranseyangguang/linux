@@ -72,7 +72,7 @@ void __init plat_init_IRQ()
 	for (i = 0; i < NR_IRQS; i++) {
 		/*
 		 * Be aware IRQ  0-31 is ARC Core INTC
-		 *          IRQ 32-95 is DW_INTC
+		 *          IRQ 32.. is DW_INTC
 		 */
 		if (!IS_EXTERNAL_IRQ(i))
 			irq_set_chip_and_handler(i, &incore_intc,

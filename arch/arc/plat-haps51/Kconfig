@@ -26,9 +26,4 @@ config DW_INTC
 	  be used to cascade external interrupts. It provides lot of
 	  fancy features such as IRQ priority, Masking, Disabling....
 
-config DW_INTC_IRQ
-	hex "ARC CPU IRQ to which controller is attached"
-	default "0xc"
-	depends on DW_INTC
-
 endif

@@ -29,7 +29,7 @@
 #define SDIO_IRQ		9
 #define DMAC_IRQ		10
 #define UART0_IRQ		11
-#define INTC_IRQ		12	/* Casceded 2nd level Intr Controller */
+#define DW_INTC_IRQ		12	/* Casceded 2nd level Intr Controller */
 #define WDT_IRQ			16
 #define GMAC_IRQ		17
 
@@ -37,18 +37,18 @@
 #ifdef CONFIG_DW_INTC
 
 #define DW_INTC_IRQS_START	32
-#define DW_INTC_IRQS_NUM	32	/* Making this 64 needs lot more work */
+#define DW_INTC_NBR_OF_IRQS	32	/* Making this 64 needs lot more work */
 
 #define UART1_IRQ		(DW_INTC_IRQS_START + 0)
 #define UART2_IRQ		(DW_INTC_IRQS_START + 1)
 #define UART3_IRQ		(DW_INTC_IRQS_START + 2)
 
-#define NR_IRQS			(DW_INTC_IRQS_START + 32)
+#define NR_IRQS			(DW_INTC_IRQS_START + DW_INTC_NBR_OF_IRQS)
 
 /* Is this IRQ fed by the cacsceded controller */
 #define IS_EXTERNAL_IRQ(g_irq)	(g_irq >= DW_INTC_IRQS_START)
 
-/* Global irqnum namespace [32..NR_IRQs] to controller private [0..63] */
+/* Global irqnum namespace [32..NR_IRQs] to controller private [0..31] */
 #define TO_INTC_IRQ(g_irq)	(g_irq - DW_INTC_IRQS_START)
 
 #define TO_SYS_IRQ(intc_irq)	(intc_irq + DW_INTC_IRQS_START)
