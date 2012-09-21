@@ -12,13 +12,13 @@
 #include <asm/irq.h>
 #include <linux/err.h>
 #include <linux/io.h>
-#include <linux/serial.h>
-#include <linux/serial_8250.h>
-
 #include <plat/irq.h>
 #include <plat/memmap.h>
 
 /* ------------------------------------------------------------------------- */
+#ifdef CONFIG_SERIAL_8250
+#include <linux/serial.h>
+#include <linux/serial_8250.h>
 
 #define ARC_UART1_CLK 12500000 /* 1/4th of core clock */
 
@@ -53,6 +53,7 @@ static struct platform_device dw_uart_device = {
 		.platform_data = dw_uart_data,
 	},
 };
+#endif /* CONFIG_SERIAL_8250 */
 
 /* ------------------------------------------------------------------------- */
 
@@ -111,7 +112,9 @@ static struct platform_device stmmac_eth_device = {
 /* ------------------------------------------------------------------------- */
 
 static struct platform_device *dw_platform_devices[] __initdata = {
+#ifdef CONFIG_SERIAL_8250
 	&dw_uart_device,
+#endif
 #ifdef CONFIG_STMMAC_ETH
 	&stmmac_eth_device,
 #endif
