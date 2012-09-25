@@ -21,7 +21,7 @@
  * line 3 of the DesignWare interrupt controller will have interrupt number 35.
  */
 
-/* Internal interrupt controller */
+/* Core internal interrupt controller handled interrupts */
 #define USBH_IRQ		5
 #define USBD_IRQ		6
 #define DSI_IRQ			7
@@ -47,10 +47,9 @@
 
 /* Is this IRQ fed by the cacsceded controller */
 #define IS_EXTERNAL_IRQ(g_irq)	(g_irq >= DW_INTC_IRQS_START)
-
 /* Global irqnum namespace [32..NR_IRQs] to controller private [0..31] */
 #define TO_INTC_IRQ(g_irq)	(g_irq - DW_INTC_IRQS_START)
-
+/* Private irqnum translation to global (system level) irqnum */
 #define TO_SYS_IRQ(intc_irq)	(intc_irq + DW_INTC_IRQS_START)
 
 #else	/* ! CONFIG_DW_INTC */

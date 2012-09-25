@@ -35,7 +35,7 @@ void __init dw_intc_init(void)
 
 	/* Hookup the casceded interrupt controller to a CPU IRQ */
 	ret = request_irq(DW_INTC_IRQ, dw_intc_do_handle_irq, 0,
-			  DW_INTC_NM, NULL);
+			  DW_INTC_NAME, NULL);
 	if (ret)
 		panic("DW_INTC: request_irq failed\n");
 }

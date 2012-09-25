@@ -30,6 +30,9 @@ static struct irq_chip incore_intc = {
 	.irq_unmask	= core_intc_unmask_irq,
 };
 
+/*
+ * DesignWare Interrupt Controller
+ */
 #ifdef CONFIG_DW_INTC
 
 static void dw_intc_irq_enable(struct irq_data *data)
@@ -52,17 +55,15 @@ static void dw_intc_irq_unmask(struct irq_data *data)
 	dw_intc_enable_int(TO_INTC_IRQ(data->irq));
 }
 
-/*
- * DesignWare Interrupt Controller
- */
 static struct irq_chip dw_intc = {
-	.name        = DW_INTC_NM,
+	.name        = DW_INTC_NAME,
 	.irq_enable  = dw_intc_irq_enable,
 	.irq_disable = dw_intc_irq_disable,
 	.irq_mask    = dw_intc_irq_mask,
 	.irq_unmask  = dw_intc_irq_unmask,
 };
-#endif
+#endif /* CONFIG_DW_INTC */
+
 
 void __init plat_init_IRQ()
 {

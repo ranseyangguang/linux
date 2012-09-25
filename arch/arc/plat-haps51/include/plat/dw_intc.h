@@ -12,7 +12,7 @@
 
 #ifdef CONFIG_DW_INTC
 
-#define DW_INTC_NM		"dw_intc"
+#define DW_INTC_NAME	"dw_intc"
 
 struct dw_intc_regmap {
 
