@@ -16,6 +16,7 @@
 #include <plat/memmap.h>
 
 /* ------------------------------------------------------------------------- */
+
 #ifdef CONFIG_SERIAL_8250
 #include <linux/serial.h>
 #include <linux/serial_8250.h>
@@ -54,6 +55,179 @@ static struct platform_device dw_uart_device = {
 	},
 };
 #endif /* CONFIG_SERIAL_8250 */
+
+/* ------------------------------------------------------------------------- */
+
+#ifdef CONFIG_DW_GPIO
+#include <plat/dw_gpio.h>
+
+static struct resource dw_gpio_res[] = {
+	[0] = {
+		.name  = "dw_gpio_reg",
+		.start = GPIO_BASE0,
+		.end   = GPIO_BASE0 + GPIO_REG_SZ,
+		.flags = IORESOURCE_MEM,
+	},
+	[1] = {
+		.name  = "dw_gpio_irq",
+		.start = DW_GPIO_IRQ,
+		.end   = DW_GPIO_IRQ,
+		.flags = IORESOURCE_IRQ,
+	},
+};
+
+static struct dw_gpio_pdata dw_gpio_data = {
+	.gpio_base          = 0,
+	.ngpio              = 0x20,
+	.port_mask          = 0xf,
+	.gpio_int_en        = 0xff,
+	.gpio_int_mask      = 0x00,
+	.gpio_int_type      = 0xff,
+	.gpio_int_pol       = 0x00,
+	.gpio_int_both_edge = 0xff,
+	.gpio_int_deb       = 0x00,
+};
+
+static struct platform_device dw_apb_gpio_device = {
+	.name          = "dw_gpio",
+	.resource      = &dw_gpio_res[0],
+	.num_resources = 2,
+	.dev = {
+		.platform_data = &dw_gpio_data,
+	},
+};
+
+#if defined(CONFIG_KEYBOARD_GPIO) || defined(CONFIG_KEYBOARD_GPIO_MODULE)
+#include <linux/input.h>
+#include <linux/gpio_keys.h>
+#include <plat/gpio.h>
+
+static struct gpio_keys_button dw_gpio_keys_table[] = {
+	{
+		.gpio		= GPIO_BUTTON_1,
+		.code		= 232, /* = CENTER */
+		.desc		= "GPIO key 1",
+		.active_low	= 1,
+		.wakeup		= 1,
+		.type		= EV_KEY,
+	},
+	{
+		.gpio		= GPIO_BUTTON_2,
+		.code		= KEY_UP,
+		.desc		= "GPIO key 2",
+		.active_low	= 1,
+		.wakeup		= 1,
+		.type		= EV_KEY,
+	},
+	{
+		.gpio		= GPIO_BUTTON_3,
+		.code		= 229, /* = MENU */
+		.desc		= "GPIO key 3",
+		.active_low	= 1,
+		.wakeup		= 1,
+		.type		= EV_KEY,
+	},
+	{
+		.gpio		= GPIO_BUTTON_4,
+		.code		= 102, /* = HOME */
+		.desc		= "GPIO key 4",
+		.active_low	= 1,
+		.wakeup		= 1,
+		.type		= EV_KEY,
+	},
+	{
+		.gpio		= GPIO_BUTTON_5,
+		.code		= KEY_LEFT,
+		.desc		= "GPIO key 5",
+		.active_low	= 1,
+		.wakeup		= 1,
+		.type		= EV_KEY,
+	},
+	{
+		.gpio		= GPIO_BUTTON_6,
+		.code		= KEY_DOWN,
+		.desc		= "GPIO key 6",
+		.active_low	= 1,
+		.wakeup		= 1,
+		.type		= EV_KEY,
+	},
+	{
+		.gpio		= GPIO_BUTTON_7,
+		.code		= KEY_RIGHT,
+		.desc		= "GPIO key 7",
+		.active_low	= 1,
+		.wakeup		= 1,
+		.type		= EV_KEY,
+	},
+	{
+		.gpio		= GPIO_BUTTON_8,
+		.code		= 158, /* = BACK */
+		.desc		= "GPIO key 8",
+		.active_low	= 1,
+		.wakeup		= 1,
+		.type		= EV_KEY,
+	}
+};
+
+static struct gpio_keys_platform_data dw_gpio_keys_data = {
+	.buttons  = dw_gpio_keys_table,
+	.nbuttons = ARRAY_SIZE(dw_gpio_keys_table),
+};
+
+static struct platform_device dw_device_gpiokeys = {
+	.name = "gpio-keys",
+	.id   = -1,
+	.dev = {
+		.platform_data = &dw_gpio_keys_data,
+	},
+};
+#endif /* CONFIG_KEYBOARD_GPIO || CONFIG_KEYBOARD_GPIO_MODULE */
+
+#ifdef CONFIG_LEDS_GPIO
+#include <linux/leds.h>
+
+static struct gpio_led default_leds[] = {
+	{
+		.name = "led1",
+		.gpio = GPIO_LED_1,
+		.default_state = LEDS_GPIO_DEFSTATE_OFF,
+	},
+	{
+		.name = "led2",
+		.gpio = GPIO_LED_2,
+		.default_state = LEDS_GPIO_DEFSTATE_OFF,
+	},
+	{
+		.name = "led3",
+		.gpio = GPIO_LED_3,
+		.default_state = LEDS_GPIO_DEFSTATE_OFF,
+	},
+	{
+		.name = "led4",
+		.gpio = GPIO_LED_4,
+		.default_state = LEDS_GPIO_DEFSTATE_OFF,
+	},
+	{
+		.name = "led5",
+		.gpio = GPIO_LED_5,
+		.default_state = LEDS_GPIO_DEFSTATE_OFF,
+	},
+};
+
+static struct gpio_led_platform_data arc_led_data = {
+	.num_leds = ARRAY_SIZE(default_leds),
+	.leds     = default_leds,
+};
+
+static struct platform_device device_gpioleds = {
+	.name = "leds-gpio",
+	.id   = -1,
+	.dev = {
+		.platform_data = &arc_led_data,
+	}
+};
+#endif /* CONFIG_LEDS_GPIO */
+#endif /* CONFIG_DW_GPIO */
 
 /* ------------------------------------------------------------------------- */
 
@@ -114,6 +288,15 @@ static struct platform_device stmmac_eth_device = {
 static struct platform_device *dw_platform_devices[] __initdata = {
 #ifdef CONFIG_SERIAL_8250
 	&dw_uart_device,
+#endif
+#ifdef CONFIG_DW_GPIO
+	&dw_apb_gpio_device,
+#if defined(CONFIG_KEYBOARD_GPIO) || defined(CONFIG_KEYBOARD_GPIO_MODULE)
+	&dw_device_gpiokeys,
+#endif
+#ifdef CONFIG_LEDS_GPIO
+	&device_gpioleds,
+#endif
 #endif
 #ifdef CONFIG_STMMAC_ETH
 	&stmmac_eth_device,

@@ -43,6 +43,8 @@
 #define UART2_IRQ		(DW_INTC_IRQS_START + 1)
 #define UART3_IRQ		(DW_INTC_IRQS_START + 2)
 
+#define DW_GPIO_IRQ		(DW_INTC_IRQS_START + 19)
+
 #define NR_IRQS			(DW_INTC_IRQS_START + DW_INTC_NBR_OF_IRQS)
 
 /* Is this IRQ fed by the cacsceded controller */
