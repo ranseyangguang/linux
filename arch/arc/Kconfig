@@ -93,6 +93,9 @@ config GENERIC_CLOCKEVENTS
 	bool
 	default y
 
+config GENERIC_GPIO
+	bool
+
 source "init/Kconfig"
 source "kernel/Kconfig.freezer"
 
