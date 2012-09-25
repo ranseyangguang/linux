@@ -285,6 +285,61 @@ static struct platform_device stmmac_eth_device = {
 
 /* ------------------------------------------------------------------------- */
 
+#ifdef CONFIG_MMC_DW
+#include <linux/dma-mapping.h>
+#include <linux/mmc/dw_mmc.h>
+
+static int plat_dwmci_get_bus_wd(u32 slot_id)
+{
+	return 4;
+}
+
+static int plat_dwmci_init(u32 slot_id, irq_handler_t handler, void *data)
+{
+	return 0;
+}
+
+static struct resource plat_dwmci_resource[] = {
+	[0] = {
+		.name  = "dw_mmc_regs",
+		.start = SDIO_BASE,
+		.end   = SDIO_BASE + SDIO_REG_SZ,
+		.flags = IORESOURCE_MEM,
+	},
+	[1] = {
+		.name  = "dw_mmc_int",
+		.start = SDIO_IRQ,
+		.end   = SDIO_IRQ,
+		.flags = IORESOURCE_IRQ,
+	},
+};
+
+static u64 plat_dwmci_dmamask = DMA_BIT_MASK(32);
+
+static struct dw_mci_board plat_dwmci_pdata = {
+	.num_slots       = 1,
+	.quirks          = DW_MCI_QUIRK_BROKEN_CARD_DETECTION,
+	.bus_hz          = 50 * 1000 * 1000,
+	.detect_delay_ms = 200,
+	.init            = plat_dwmci_init,
+	.get_bus_wd      = plat_dwmci_get_bus_wd,
+};
+
+struct platform_device dw_mci_device = {
+	.name          = "dw_mmc",
+	.id            = -1,
+	.num_resources = ARRAY_SIZE(plat_dwmci_resource),
+	.resource      = plat_dwmci_resource,
+	.dev           = {
+		.dma_mask          = &plat_dwmci_dmamask,
+		.coherent_dma_mask = DMA_BIT_MASK(32),
+		.platform_data     = &plat_dwmci_pdata,
+	},
+};
+#endif
+
+/* ------------------------------------------------------------------------- */
+
 static struct platform_device *dw_platform_devices[] __initdata = {
 #ifdef CONFIG_SERIAL_8250
 	&dw_uart_device,
@@ -296,6 +351,9 @@ static struct platform_device *dw_platform_devices[] __initdata = {
 #endif
 #ifdef CONFIG_LEDS_GPIO
 	&device_gpioleds,
+#endif
+#ifdef CONFIG_MMC_DW
+	&dw_mci_device,
 #endif
 #endif
 #ifdef CONFIG_STMMAC_ETH
