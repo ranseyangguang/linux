@@ -8,4 +8,5 @@
 
 obj-y += platform.o irq.o
 
+obj-$(CONFIG_DW_GPIO) += dw_gpio.o
 obj-$(CONFIG_DW_INTC) += dw_intc.o

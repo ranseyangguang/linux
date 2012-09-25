@@ -18,6 +18,19 @@ config ARC_HAPS51_BOARD_BASIC
 
 endchoice
 
+config DW_GPIO
+	bool "Designware IP GPIO"
+	select DW_INTC
+	select GENERIC_GPIO
+	select ARCH_REQUIRE_GPIOLIB
+	select LEDS_CLASS
+	default n
+	help
+	  Synopsys DesignWare APB GPIO device driver
+	  This device gives acces to the buttons and leds
+	  of the multi-IO interface extension board.
+	  It is dependent on GPIOLIB and LEDS_CLASS
+
 config DW_INTC
 	bool "Off-chip Synopsys DW Interrupt Controller"
 	default n
