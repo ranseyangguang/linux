@@ -12,6 +12,9 @@
 #include <linux/serio.h>
 #include <linux/platform_device.h>
 #include <linux/io.h>
+#include <linux/kernel.h>
+#include <linux/slab.h>
+#include <plat/memmap.h>
 
 #define ARC_PS2_PORTS                   (2)
 
@@ -80,7 +83,7 @@ static void arc_ps2_check_rx(struct arc_ps2_data *arc_ps2,
 		else if (status & PS2_STAT_RX_BUF_OVER)
 			flag |= SERIO_FRAME;
 #endif
-		data = inb(port->data);
+		data = inl(port->data) & 0xff;
 		serio_interrupt(port->io, data, flag);
 	} while (1);
 }
@@ -109,7 +112,7 @@ static int arc_ps2_write(struct serio *io, unsigned char val)
 	} while (!(status & PS2_STAT_TX_ISNOT_FUL) && timeout);
 
 	if (timeout)
-		outb(val, port->data);
+		outl(val & 0xff, port->data);
 	else {
 #ifdef CONFIG_ARC_PS2_DEBUG
 		printk(KERN_ERR "ARC PS/2: write timeout\n");
@@ -193,7 +196,7 @@ static int __devinit arc_ps2_probe(struct platform_device *dev)
 	/* we have got only one shared interrupt so we can place it
 	 * here insted of arc_ps2_open */
 	ret = request_irq(PS2_IRQ, arc_ps2_interrupt, 0,
-			  "ARC PS/2 interrupt", arc_ps2);
+			  "ARC PS2 interrupt", arc_ps2);
 	if (ret) {
 		printk(KERN_ERR "ARC PS/2: Could not allocate IRQ\n");
 		goto release;
