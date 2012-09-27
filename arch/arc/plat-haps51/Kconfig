@@ -39,4 +39,31 @@ config DW_INTC
 	  be used to cascade external interrupts. It provides lot of
 	  fancy features such as IRQ priority, Masking, Disabling....
 
+config DW_PGU2
+	tristate "Use Synopsys DW Pixel Graphics Unit"
+	select FB
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+	help
+		Select DW PGU2 which is an alternative for the regular ARC PGU
+		This device includes generic software accelerated graphics
+		Further more, it contains a double buffered framebuffer
+		Be carefull, functionaly it is very much different from ARC PGU
+
+config ARCPGU_YUVBUFS
+	int 'Number of YUV Buffers'
+	default 18
+	depends on PGU_SIM || DW_PGU2
+
+config DWPGU2_RGBBUFS
+	int 'Number of RGB Buffers'
+	default 2
+	depends on DW_PGU2
+
+config ARCPGU_DISPTYPE
+	int 'Display selector (0 - VGA, 1 - QVGA)'
+	default 0
+	depends on PGU_SIM || DW_PGU2
+
 endif
