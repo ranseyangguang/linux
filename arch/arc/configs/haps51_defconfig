@@ -229,7 +229,7 @@ CONFIG_ARC_DW2_UNWIND=y
 # CONFIG_ARC_DBG_TLB_PARANOIA is not set
 # CONFIG_ARC_DBG_EVENT_TIMELINE is not set
 # CONFIG_ARC_DBG_TLB_MISS_COUNT is not set
-CONFIG_CMDLINE="init=/init console=ttyS0,115200n8 print-fatal-signals=1"
+CONFIG_CMDLINE="init=/init console=uart8250,mmio32,0xC0000000,115200n8 print-fatal-signals=1"
 # CONFIG_CMDLINE_UBOOT is not set
 # CONFIG_PREEMPT_NONE is not set
 # CONFIG_PREEMPT_VOLUNTARY is not set
