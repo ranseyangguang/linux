@@ -827,7 +827,7 @@ static const char *section_white_list[] =
 	".note*",
 	".got*",
 	".toc*",
-    ".gnu.linkonce.arcext*",
+	".arcextmap*",		/* arc */
 	NULL
 };
 
