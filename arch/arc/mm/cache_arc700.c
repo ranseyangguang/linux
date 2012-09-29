@@ -458,6 +458,7 @@ EXPORT_SYMBOL(inv_dcache_range);
 
 #else
 #define __arc_dcache_flush_lines(a, b)
+#define __arc_dcache_inv_lines(a, b, c)
 #endif
 
 #ifdef CONFIG_ARC_HAS_ICACHE

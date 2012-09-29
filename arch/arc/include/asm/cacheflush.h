@@ -100,7 +100,7 @@ void flush_and_inv_dcache_all(void);
 
 #define flush_dcache_range(start, end)		do { } while (0)
 #define flush_dcache_page(page)			do { } while (0)
-#define flush_dcache_all(start, size)		do { } while (0)
+#define flush_dcache_all()			do { } while (0)
 #define inv_dcache_all()			do { } while (0)
 #define inv_dcache_range(start, size)		do { } while (0)
 #define flush_and_inv_dcache_all()		do { } while (0)
