@@ -18,19 +18,18 @@
 /* ------------------------------------------------------------------------- */
 
 #ifdef CONFIG_SERIAL_8250
+#include <asm/serial.h>
 #include <linux/serial.h>
 #include <linux/serial_8250.h>
 
-#define ARC_UART1_CLK 12500000 /* 1/4th of core clock */
-
-#define PORT(_base, _irq)                \
-{                                        \
+#define PORT(_base, _irq)                    \
+{                                            \
 	.iobase   = _base,                   \
 	.membase  = (void __iomem *) _base,  \
 	.mapbase  = (resource_size_t) _base, \
 	.irq      = _irq,                    \
 	.irqflags = 0    ,                   \
-	.uartclk  = ARC_UART1_CLK,           \
+	.uartclk  = BASE_BAUD * 16,          \
 	.regshift = 2,                       \
 	.iotype   = UPIO_MEM32,              \
 	.flags    = UPF_SKIP_TEST,           \

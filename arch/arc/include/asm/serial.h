@@ -9,6 +9,6 @@
 #ifndef _ASM_ARC_SERIAL_H
 #define _ASM_ARC_SERIAL_H
 
-#include <asm-generic/serial.h>
+#include <plat/serial.h>
 
 #endif /* _ASM_ARC_SERIAL_H */
