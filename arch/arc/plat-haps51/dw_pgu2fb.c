@@ -40,8 +40,6 @@
 
 #define VOLATILE_MEMSET(s, c, n) memset((void *) s, c, n)
 
-DECLARE_MUTEX(dwpgu_sem);
-
 struct dw_pgu2_devdata {
 	struct fb_info info;            /* Framebuffer driver info */
 	struct known_displays *display; /* Display connected to device */
@@ -122,11 +120,13 @@ static void stop_dw_pgu2(void)
 
 	/* Wait for the PGU to stop running */
 	while (fb_devdata.regs->stat & DWPGU2_STAT_BUSY_MASK)
-		/* do nothing */
+		;
 
 	/* And a bit more for good measure */
 	for (i = 0; i < 10000; i++)
-		printk(KERN_INFO "dw_pgu2 stopping now.\n");
+		;
+
+	printk(KERN_INFO "dw_pgu2 stopping now.\n");
 }
 
 static int set_rgb_pointer(struct fb_info *info)
@@ -262,7 +262,7 @@ int dw_pgu2_setmode(struct fb_info *info)
 		DWPGU2_CTRL_CONT_MASK);
 
 	for (i = 0; i < 10000; i++)
-		/* do nothing */
+		;
 
 	/* enable interrupts  */
 	set_color_bitfields(&dw_pgu2_var);
@@ -535,7 +535,7 @@ static void __exit dw_pgu2fb_exit(void)
 /* ------------------------------------------------------------------------- */
 
 module_init(dw_pgu2fb_init);
-module_exit(dw_pgu2fb_remove);
+module_exit(dw_pgu2fb_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Synopsys Frank Dols");
