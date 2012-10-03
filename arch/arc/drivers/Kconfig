@@ -16,6 +16,7 @@ config ARC_BLK_DEV_IDEDMA
 config SERIAL_ARC
 	bool "ARC UART driver support"
 	select SERIAL_CORE
+	depends on ARC_PLAT_FPGA_LEGACY
 	default y
 	help
 	  Driver for on-chip UART for ARC(Synopsys) for the legacy
