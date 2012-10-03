@@ -155,12 +155,39 @@ void __init arc_platform_early_init(void)
 #endif
 }
 
+#ifdef CONFIG_ARC_PS2
+static struct resource arc_ps2_resources[] = {
+	[0] = {
+		.name  = "arc_ps2_regs",
+		.start = PS2_BASE_ADDR,
+		.end   = PS2_BASE_ADDR + (5 * 4) - 1,
+		.flags = IORESOURCE_MEM,
+	},
+	[1] = {
+		.name  = "arc_ps2_irq",
+		.start = PS2_IRQ,
+		.end   = PS2_IRQ,
+		.flags = IORESOURCE_IRQ,
+	 },
+};
+
+static struct platform_device arc_ps2_device = {
+	.name          = "arc_ps2",
+	.resource      = arc_ps2_resources,
+	.num_resources = ARRAY_SIZE(arc_ps2_resources),
+};
+#endif /* CONFIG_ARC_PS2 */
+
 static struct platform_device *fpga_devs[] __initdata = {
 #if defined(CONFIG_SERIAL_ARC)
 	&arc_uart0_dev,
 #if CONFIG_SERIAL_ARC_NR_PORTS > 1
 	&arc_uart1_dev,
 #endif
+#endif
+
+#if defined(CONFIG_ARC_PS2)
+	&arc_ps2_device,
 #endif
 };
 

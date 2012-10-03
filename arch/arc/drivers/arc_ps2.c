@@ -14,7 +14,6 @@
 #include <linux/io.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
-#include <plat/memmap.h>
 
 #define ARC_PS2_PORTS                   (2)
 
@@ -54,8 +53,6 @@ struct arc_ps2_data {
 #endif
 	struct arc_ps2_port port[ARC_PS2_PORTS];
 };
-
-static struct platform_device *arc_ps2_device;
 
 static void arc_ps2_check_rx(struct arc_ps2_data *arc_ps2,
 			     struct arc_ps2_port *port)
@@ -136,7 +133,8 @@ static void arc_ps2_close(struct serio *io)
 	outl_and(~PS2_STAT_RX_INT_EN, port->status);
 }
 
-int __devinit arc_ps2_allocate_port(struct arc_ps2_port *port, int index)
+int __devinit arc_ps2_allocate_port(struct arc_ps2_port *port, int index,
+				    unsigned base)
 {
 
 	port->io = kzalloc(sizeof(struct serio), GFP_KERNEL);
@@ -152,8 +150,8 @@ int __devinit arc_ps2_allocate_port(struct arc_ps2_port *port, int index)
 	snprintf(port->io->phys, sizeof(port->io->phys), "arc/serio%d", index);
 	port->io->port_data = port;
 
-	port->data = PS2_BASE_ADDR + 4 + index * 4;
-	port->status = PS2_BASE_ADDR + 4 + ARC_PS2_PORTS * 4 + index * 4;
+	port->data = base + 4 + index * 4;
+	port->status = base + 4 + ARC_PS2_PORTS * 4 + index * 4;
 
 	printk(KERN_DEBUG
 	       "ARC PS/2: port%d is allocated (data = 0x%x, status = 0x%x)\n",
@@ -162,10 +160,12 @@ int __devinit arc_ps2_allocate_port(struct arc_ps2_port *port, int index)
 	return 0;
 }
 
-static int __devinit arc_ps2_probe(struct platform_device *dev)
+static int __devinit arc_ps2_probe(struct platform_device *pdev)
 {
 	struct arc_ps2_data *arc_ps2 = NULL;
-	int ret, id, i;
+	struct resource *res;
+	unsigned addr;
+	int ret, id, i, irq;
 
 	arc_ps2 = kzalloc(sizeof(struct arc_ps2_data), GFP_KERNEL);
 	if (!arc_ps2) {
@@ -173,20 +173,49 @@ static int __devinit arc_ps2_probe(struct platform_device *dev)
 		goto out;
 	}
 
-	printk(KERN_INFO "ARC PS/2: irq = %d, address = 0x%x, ports = %i\n",
-	       PS2_IRQ, PS2_BASE_ADDR, ARC_PS2_PORTS);
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!res) {
+		ret = -ENODEV;
+		goto out_free;
+	}
 
-	id = inl(PS2_BASE_ADDR);
+	irq = platform_get_irq_byname(pdev, "arc_ps2_irq");
+	if (irq < 0) {
+		ret = -ENODEV;
+		goto out_free;
+	}
+
+	if (!request_mem_region(res->start, resource_size(res),
+				pdev->name)) {
+		pr_err("%s: ERROR: memory allocation failed"
+		       "cannot get the I/O addr 0x%x\n",
+		       __func__, (unsigned int)res->start);
+
+		ret = -EBUSY;
+		goto out_free;
+	}
+
+	addr = (unsigned) ioremap(res->start, resource_size(res));
+	if (!addr) {
+		pr_err("%s: ERROR: memory mapping failed\n", __func__);
+		ret = -ENOMEM;
+		goto out_release_region;
+	}
+
+	printk(KERN_INFO "ARC PS/2: irq = %d, address = 0x%x, ports = %i\n",
+	       irq, addr, ARC_PS2_PORTS);
+
+	id = inl(addr);
 	if (id != ARC_ARC_PS2_ID) {
 		printk(KERN_ERR "ARC PS/2: device id does not match\n");
 		ret = ENXIO;
-		goto release;
+		goto out_unmap;
 	}
 
-	platform_set_drvdata(dev, arc_ps2);
+	platform_set_drvdata(pdev, arc_ps2);
 
 	for (i = 0; i < ARC_PS2_PORTS; i++) {
-		if (arc_ps2_allocate_port(&arc_ps2->port[i], i)) {
+		if (arc_ps2_allocate_port(&arc_ps2->port[i], i, addr)) {
 			ret = -ENOMEM;
 			goto release;
 		}
@@ -195,7 +224,7 @@ static int __devinit arc_ps2_probe(struct platform_device *dev)
 
 	/* we have got only one shared interrupt so we can place it
 	 * here insted of arc_ps2_open */
-	ret = request_irq(PS2_IRQ, arc_ps2_interrupt, 0,
+	ret = request_irq(irq, arc_ps2_interrupt, 0,
 			  "ARC PS2 interrupt", arc_ps2);
 	if (ret) {
 		printk(KERN_ERR "ARC PS/2: Could not allocate IRQ\n");
@@ -209,6 +238,11 @@ release:
 		if (arc_ps2->port[i].io)
 			serio_unregister_port(arc_ps2->port[i].io);
 	}
+out_unmap:
+	iounmap((void __iomem *) addr);
+out_release_region:
+	release_mem_region(res->start, resource_size(res));
+out_free:
 	if (arc_ps2)
 		kfree(arc_ps2);
 out:
@@ -251,28 +285,11 @@ static struct platform_driver arc_ps2_driver = {
 
 static int __init arc_ps2_init(void)
 {
-	int ret;
-
-	ret = platform_driver_register(&arc_ps2_driver);
-	if (ret)
-		return ret;
-
-	arc_ps2_device = platform_device_register_simple("arc_ps2", 0, NULL, 0);
-	if (IS_ERR(arc_ps2_device)) {
-		ret = PTR_ERR(arc_ps2_device);
-		goto err_unregister_driver;
-	}
-
-	return 0;
-
-err_unregister_driver:
-	platform_driver_unregister(&arc_ps2_driver);
-	return ret;
+	return platform_driver_register(&arc_ps2_driver);
 }
 
 static void __exit arc_ps2_exit(void)
 {
-	platform_device_unregister(arc_ps2_device);
 	platform_driver_unregister(&arc_ps2_driver);
 }
 
