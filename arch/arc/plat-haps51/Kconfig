@@ -11,7 +11,7 @@ if ARC_PLAT_HAPS51
 choice
 	prompt "HAPS51 Board Flavours"
 
-config ARC_HAPS51_BOARD_BASIC
+config ARC_BOARD_HAPS51
 	bool "Basic HAPS51 Board"
 	help
 	  Synopsys HAPS51 Basic Subsystem FPGA board (Xilinx Virtex-5 Based).
