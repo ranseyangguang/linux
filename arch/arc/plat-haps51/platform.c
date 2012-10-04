@@ -339,6 +339,33 @@ struct platform_device dw_mci_device = {
 
 /* ------------------------------------------------------------------------- */
 
+#ifdef CONFIG_ARC_PS2
+static struct resource arc_ps2_resources[] = {
+	[0] = {
+		.name  = "arc_ps2_regs",
+		.start = PS2_BASE_ADDR,
+		.end   = PS2_BASE_ADDR + (5 * 4) - 1,
+		.flags = IORESOURCE_MEM,
+	},
+	[1] = {
+		.name  = "arc_ps2_irq",
+		.start = PS2_IRQ,
+		.end   = PS2_IRQ,
+		.flags = IORESOURCE_IRQ,
+	 },
+};
+
+static struct platform_device arc_ps2_device = {
+	.name          = "arc_ps2",
+	.resource      = arc_ps2_resources,
+	.num_resources = ARRAY_SIZE(arc_ps2_resources),
+	.dev = {
+	},
+};
+#endif /* CONFIG_ARC_PS2 */
+
+/* ------------------------------------------------------------------------- */
+
 static struct platform_device *dw_platform_devices[] __initdata = {
 #ifdef CONFIG_SERIAL_8250
 	&dw_uart_device,
@@ -357,6 +384,9 @@ static struct platform_device *dw_platform_devices[] __initdata = {
 #endif
 #ifdef CONFIG_STMMAC_ETH
 	&stmmac_eth_device,
+#endif
+#ifdef CONFIG_ARC_PS2
+	&arc_ps2_device,
 #endif
 };
 

@@ -16,7 +16,17 @@ config ARC_BOARD_HAPS51
 	help
 	  Synopsys HAPS51 Basic Subsystem FPGA board (Xilinx Virtex-5 Based).
 
+config ARC_MODEL_NSIM_OSCI
+	bool "NSIM OSCI System C model"
+	help
+	  NSIM based System C model. This model is compatible with some of the
+	  peripherals that are also used for the HAPS51 FPGA board.
+
+	  OSCI stands for Open SystemC Initiative.
+
 endchoice
+
+if ARC_BOARD_HAPS51
 
 config DW_GPIO
 	bool "Designware IP GPIO"
@@ -38,6 +48,8 @@ config DW_INTC
 	  This is the off-chip (2nd level) Interrupt Controller which can
 	  be used to cascade external interrupts. It provides lot of
 	  fancy features such as IRQ priority, Masking, Disabling....
+
+endif
 
 config DW_PGU2
 	tristate "Use Synopsys DW Pixel Graphics Unit"
@@ -65,5 +77,7 @@ config ARCPGU_DISPTYPE
 	int 'Display selector (0 - VGA, 1 - QVGA)'
 	default 0
 	depends on PGU_SIM || DW_PGU2
+
+source arch/arc/drivers/Kconfig
 
 endif

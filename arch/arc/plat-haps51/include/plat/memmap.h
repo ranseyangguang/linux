@@ -37,4 +37,6 @@
 #define GMAC_BASE		0xE2010000
 #define GMAC_REG_SZ		0x00004000
 
+#define PS2_BASE_ADDR		0xC9000400
+
 #endif
