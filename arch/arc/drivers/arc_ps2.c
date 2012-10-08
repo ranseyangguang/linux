@@ -128,7 +128,6 @@ static void arc_ps2_close(struct serio *io)
 int __devinit arc_ps2_allocate_port(struct arc_ps2_port *port, int index,
 				    unsigned base)
 {
-
 	port->io = kzalloc(sizeof(struct serio), GFP_KERNEL);
 	if (!port->io)
 		return -1;
@@ -179,8 +178,7 @@ static int __devinit arc_ps2_probe(struct platform_device *pdev)
 
 	if (!request_mem_region(arc_ps2->iomem_res->start,
 	    resource_size(arc_ps2->iomem_res), pdev->name)) {
-		pr_err("%s: ERROR: memory allocation failed"
-		       "cannot get the I/O addr 0x%x\n",
+		pr_err("%s: ERROR: memory allocation failed cannot get the I/O addr 0x%x\n",
 		       __func__, (unsigned int)arc_ps2->iomem_res->start);
 
 		ret = -EBUSY;
@@ -216,10 +214,8 @@ static int __devinit arc_ps2_probe(struct platform_device *pdev)
 		serio_register_port(arc_ps2->port[i].io);
 	}
 
-	/* we have got only one shared interrupt so we can place it
-	 * here insted of arc_ps2_open */
-			  "ARC PS2 interrupt", arc_ps2);
 	ret = request_irq(arc_ps2->irq, arc_ps2_interrupt, 0,
+			  "arc_ps2", arc_ps2);
 	if (ret) {
 		pr_err("%s: Could not allocate IRQ\n", __func__);
 		goto release;
@@ -238,8 +234,7 @@ out_release_region:
 	release_mem_region(arc_ps2->iomem_res->start,
 			   resource_size(arc_ps2->iomem_res));
 out_free:
-	if (arc_ps2)
-		kfree(arc_ps2);
+	kfree(arc_ps2);
 out:
 	return ret;
 }
