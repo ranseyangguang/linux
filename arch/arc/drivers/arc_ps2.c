@@ -34,15 +34,13 @@ struct arc_ps2_port {
 };
 
 struct arc_ps2_data {
-#ifdef CONFIG_ARC_PS2_DEBUG
-	unsigned frame_error;
-	unsigned buf_overflow;
-	unsigned total_int;
-#endif
 	struct arc_ps2_port port[ARC_PS2_PORTS];
 	struct resource *iomem_res;
 	int irq;
 	unsigned long addr;
+	unsigned frame_error;
+	unsigned buf_overflow;
+	unsigned total_int;
 };
 
 static void arc_ps2_check_rx(struct arc_ps2_data *arc_ps2,
@@ -56,7 +54,7 @@ static void arc_ps2_check_rx(struct arc_ps2_data *arc_ps2,
 		if (!(status & PS2_STAT_RX_VAL))
 			break;
 		flag = 0;
-#ifdef CONFIG_ARC_PS2_DEBUG
+
 		arc_ps2->total_int++;
 		if (status & PS2_STAT_RX_FRM_ERR) {
 			arc_ps2->frame_error++;
@@ -65,13 +63,8 @@ static void arc_ps2_check_rx(struct arc_ps2_data *arc_ps2,
 			arc_ps2->buf_overflow++;
 			flag |= SERIO_FRAME;
 		}
-#else
-		if (status & PS2_STAT_RX_FRM_ERR)
-			flag |= SERIO_PARITY;
-		else if (status & PS2_STAT_RX_BUF_OVER)
-			flag |= SERIO_FRAME;
-#endif
 		data = inl(port->data) & 0xff;
+
 		serio_interrupt(port->io, data, flag);
 	} while (1);
 }
@@ -102,9 +95,7 @@ static int arc_ps2_write(struct serio *io, unsigned char val)
 	if (timeout)
 		outl(val & 0xff, port->data);
 	else {
-#ifdef CONFIG_ARC_PS2_DEBUG
 		pr_err("%s: write timeout\n", __func__);
-#endif
 		return -1;
 	}
 
@@ -256,13 +247,12 @@ static int __devexit arc_ps2_remove(struct platform_device *dev)
 	release_mem_region(arc_ps2->iomem_res->start,
 			   resource_size(arc_ps2->iomem_res));
 
-#ifdef CONFIG_ARC_PS2_DEBUG
 	pr_debug("%s: interrupt count = %i\n", __func__, arc_ps2->total_int);
 	pr_debug("%s: frame error count = %i\n", __func__,
 	       arc_ps2->frame_error);
 	pr_debug("%s: buffer overflow count = %i\n", __func__,
 	       arc_ps2->buf_overflow);
-#endif
+
 	kfree(arc_ps2);
 
 	return 0;
