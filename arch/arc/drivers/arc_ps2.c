@@ -100,7 +100,7 @@ static int arc_ps2_write(struct serio *io, unsigned char val)
 		outl(val & 0xff, port->data);
 	else {
 #ifdef CONFIG_ARC_PS2_DEBUG
-		printk(KERN_ERR "ARC PS/2: write timeout\n");
+		pr_err("%s: write timeout\n", __func__);
 #endif
 		return -1;
 	}
@@ -142,9 +142,8 @@ int __devinit arc_ps2_allocate_port(struct arc_ps2_port *port, int index,
 	port->data = base + 4 + index * 4;
 	port->status = base + 4 + ARC_PS2_PORTS * 4 + index * 4;
 
-	printk(KERN_DEBUG
-	       "ARC PS/2: port%d is allocated (data = 0x%x, status = 0x%x)\n",
-	       index, port->data, port->status);
+	pr_debug("%s: port%d is allocated (data = 0x%x, status = 0x%x)\n",
+		 __func__, index, port->data, port->status);
 
 	return 0;
 }
@@ -158,18 +157,21 @@ static int __devinit arc_ps2_probe(struct platform_device *pdev)
 
 	arc_ps2 = kzalloc(sizeof(struct arc_ps2_data), GFP_KERNEL);
 	if (!arc_ps2) {
+		pr_err("%s: ERROR: out of memory\n", __func__);
 		ret = -ENOMEM;
 		goto out;
 	}
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res) {
+		pr_err("%s: ERROR: no IO memory defined\n", __func__);
 		ret = -ENODEV;
 		goto out_free;
 	}
 
 	irq = platform_get_irq_byname(pdev, "arc_ps2_irq");
 	if (irq < 0) {
+		pr_err("%s: ERROR: no IRQ defined\n", __func__);
 		ret = -ENODEV;
 		goto out_free;
 	}
@@ -191,12 +193,12 @@ static int __devinit arc_ps2_probe(struct platform_device *pdev)
 		goto out_release_region;
 	}
 
-	printk(KERN_INFO "ARC PS/2: irq = %d, address = 0x%x, ports = %i\n",
+	pr_info("%s: irq = %d, address = 0x%lx, ports = %i\n", __func__,
 	       irq, addr, ARC_PS2_PORTS);
 
 	id = inl(addr);
 	if (id != ARC_ARC_PS2_ID) {
-		printk(KERN_ERR "ARC PS/2: device id does not match\n");
+		pr_err("%s: device id does not match\n", __func__);
 		ret = ENXIO;
 		goto out_unmap;
 	}
@@ -216,7 +218,7 @@ static int __devinit arc_ps2_probe(struct platform_device *pdev)
 	ret = request_irq(irq, arc_ps2_interrupt, 0,
 			  "ARC PS2 interrupt", arc_ps2);
 	if (ret) {
-		printk(KERN_ERR "ARC PS/2: Could not allocate IRQ\n");
+		pr_err("%s: Could not allocate IRQ\n", __func__);
 		goto release;
 	}
 
@@ -251,11 +253,10 @@ static int __devexit arc_ps2_remove(struct platform_device *dev)
 		serio_unregister_port(arc_ps2->port[i].io);
 	}
 #ifdef CONFIG_ARC_PS2_DEBUG
-	printk(KERN_DEBUG "ARC PS/2: interrupt count = %i\n",
-	       arc_ps2->total_int);
-	printk(KERN_DEBUG "ARC PS/2: frame error count = %i\n",
+	pr_debug("%s: interrupt count = %i\n", __func__, arc_ps2->total_int);
+	pr_debug("%s: frame error count = %i\n", __func__,
 	       arc_ps2->frame_error);
-	printk(KERN_DEBUG "ARC PS/2: buffer overflow count = %i\n",
+	pr_debug("%s: buffer overflow count = %i\n", __func__,
 	       arc_ps2->buf_overflow);
 #endif
 	kfree(arc_ps2);
