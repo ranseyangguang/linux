@@ -40,6 +40,9 @@ struct arc_ps2_data {
 	unsigned total_int;
 #endif
 	struct arc_ps2_port port[ARC_PS2_PORTS];
+	struct resource *iomem_res;
+	int irq;
+	unsigned long addr;
 };
 
 static void arc_ps2_check_rx(struct arc_ps2_data *arc_ps2,
@@ -150,10 +153,8 @@ int __devinit arc_ps2_allocate_port(struct arc_ps2_port *port, int index,
 
 static int __devinit arc_ps2_probe(struct platform_device *pdev)
 {
-	struct arc_ps2_data *arc_ps2 = NULL;
-	struct resource *res;
-	unsigned addr;
-	int ret, id, i, irq;
+	struct arc_ps2_data *arc_ps2;
+	int ret, id, i;
 
 	arc_ps2 = kzalloc(sizeof(struct arc_ps2_data), GFP_KERNEL);
 	if (!arc_ps2) {
@@ -162,41 +163,42 @@ static int __devinit arc_ps2_probe(struct platform_device *pdev)
 		goto out;
 	}
 
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	if (!res) {
+	arc_ps2->iomem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!arc_ps2->iomem_res) {
 		pr_err("%s: ERROR: no IO memory defined\n", __func__);
 		ret = -ENODEV;
 		goto out_free;
 	}
 
-	irq = platform_get_irq_byname(pdev, "arc_ps2_irq");
-	if (irq < 0) {
+	arc_ps2->irq = platform_get_irq_byname(pdev, "arc_ps2_irq");
+	if (arc_ps2->irq < 0) {
 		pr_err("%s: ERROR: no IRQ defined\n", __func__);
 		ret = -ENODEV;
 		goto out_free;
 	}
 
-	if (!request_mem_region(res->start, resource_size(res),
-				pdev->name)) {
+	if (!request_mem_region(arc_ps2->iomem_res->start,
+	    resource_size(arc_ps2->iomem_res), pdev->name)) {
 		pr_err("%s: ERROR: memory allocation failed"
 		       "cannot get the I/O addr 0x%x\n",
-		       __func__, (unsigned int)res->start);
+		       __func__, (unsigned int)arc_ps2->iomem_res->start);
 
 		ret = -EBUSY;
 		goto out_free;
 	}
 
-	addr = (unsigned) ioremap(res->start, resource_size(res));
-	if (!addr) {
+	arc_ps2->addr = (unsigned long) ioremap_nocache(arc_ps2->iomem_res->
+			start, resource_size(arc_ps2->iomem_res));
+	if (!arc_ps2->addr) {
 		pr_err("%s: ERROR: memory mapping failed\n", __func__);
 		ret = -ENOMEM;
 		goto out_release_region;
 	}
 
 	pr_info("%s: irq = %d, address = 0x%lx, ports = %i\n", __func__,
-	       irq, addr, ARC_PS2_PORTS);
+	       arc_ps2->irq, arc_ps2->addr, ARC_PS2_PORTS);
 
-	id = inl(addr);
+	id = inl(arc_ps2->addr);
 	if (id != ARC_ARC_PS2_ID) {
 		pr_err("%s: device id does not match\n", __func__);
 		ret = ENXIO;
@@ -206,7 +208,8 @@ static int __devinit arc_ps2_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, arc_ps2);
 
 	for (i = 0; i < ARC_PS2_PORTS; i++) {
-		if (arc_ps2_allocate_port(&arc_ps2->port[i], i, addr)) {
+		if (arc_ps2_allocate_port(&arc_ps2->port[i], i,
+					  arc_ps2->addr)) {
 			ret = -ENOMEM;
 			goto release;
 		}
@@ -215,8 +218,8 @@ static int __devinit arc_ps2_probe(struct platform_device *pdev)
 
 	/* we have got only one shared interrupt so we can place it
 	 * here insted of arc_ps2_open */
-	ret = request_irq(irq, arc_ps2_interrupt, 0,
 			  "ARC PS2 interrupt", arc_ps2);
+	ret = request_irq(arc_ps2->irq, arc_ps2_interrupt, 0,
 	if (ret) {
 		pr_err("%s: Could not allocate IRQ\n", __func__);
 		goto release;
@@ -230,9 +233,10 @@ release:
 			serio_unregister_port(arc_ps2->port[i].io);
 	}
 out_unmap:
-	iounmap((void __iomem *) addr);
+	iounmap((void __iomem *) arc_ps2->addr);
 out_release_region:
-	release_mem_region(res->start, resource_size(res));
+	release_mem_region(arc_ps2->iomem_res->start,
+			   resource_size(arc_ps2->iomem_res));
 out_free:
 	if (arc_ps2)
 		kfree(arc_ps2);
@@ -246,12 +250,17 @@ static int __devexit arc_ps2_remove(struct platform_device *dev)
 	int i;
 
 	arc_ps2 = platform_get_drvdata(dev);
-	free_irq(PS2_IRQ, arc_ps2);
 	for (i = 0; i < ARC_PS2_PORTS; i++) {
 		/* turn off any interrupts */
 		outl(0, arc_ps2->port[i].status);
 		serio_unregister_port(arc_ps2->port[i].io);
 	}
+
+	free_irq(arc_ps2->irq, arc_ps2);
+	iounmap((void __iomem *) arc_ps2->addr);
+	release_mem_region(arc_ps2->iomem_res->start,
+			   resource_size(arc_ps2->iomem_res));
+
 #ifdef CONFIG_ARC_PS2_DEBUG
 	pr_debug("%s: interrupt count = %i\n", __func__, arc_ps2->total_int);
 	pr_debug("%s: frame error count = %i\n", __func__,
