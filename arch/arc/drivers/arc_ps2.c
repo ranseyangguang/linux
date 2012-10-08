@@ -28,18 +28,6 @@
 #define PS2_STAT_TX_ISNOT_FUL           (1 << 4)
 #define PS2_STAT_TX_INT_EN              (1 << 5)
 
-#define outl_and(val, addr)			\
-	{					\
-		unsigned reg = inl(addr);	\
-		outl(reg & val, addr);		\
-	}
-
-#define outl_or(val, addr)			\
-	{					\
-		unsigned reg = inl(addr);	\
-		outl(reg | val, addr);		\
-	}
-
 struct arc_ps2_port {
 	unsigned data, status;
 	struct serio *io;
@@ -130,7 +118,8 @@ static int arc_ps2_open(struct serio *io)
 static void arc_ps2_close(struct serio *io)
 {
 	struct arc_ps2_port *port = io->port_data;
-	outl_and(~PS2_STAT_RX_INT_EN, port->status);
+
+	outl(inl(port->status) & ~PS2_STAT_RX_INT_EN, port->status);
 }
 
 int __devinit arc_ps2_allocate_port(struct arc_ps2_port *port, int index,
