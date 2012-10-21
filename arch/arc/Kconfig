@@ -25,6 +25,7 @@ config ARC
 	# DEVTMPS in turn needs HOTPLUG
 	select HOTPLUG if !INITRAMFS_SOURCE=""
 	select DEVTMPFS if !INITRAMFS_SOURCE=""
+	select HAVE_IRQ_WORK
 
 config RWSEM_GENERIC_SPINLOCK
 	def_bool y
