@@ -295,6 +295,7 @@
 #include <linux/param.h>
 #include <linux/delay.h>
 #include <linux/jiffies.h>
+#include <asm-generic/sizes.h>
 
 
 #ifdef LM_INTERFACE

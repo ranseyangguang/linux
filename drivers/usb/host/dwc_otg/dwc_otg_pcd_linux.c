@@ -86,7 +86,6 @@
 #else
 /* by 2.6.31, at least, the location of some headers has changed
 */
-#include <mach/irqs.h>
 #include <linux/usb/ch9.h>
 #include <linux/usb/gadget.h>
 #endif

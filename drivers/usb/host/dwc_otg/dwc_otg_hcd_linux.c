@@ -684,9 +684,9 @@ static int urb_enqueue(struct usb_hcd *hcd,
 		 * In Buffer DMA mode virual address is used,
 		 * when handling non DWORD aligned buffers.
 		 */
-		//buf = phys_to_virt(urb->transfer_dma);
+		buf = phys_to_virt(urb->transfer_dma);
                 // DMA addresses are bus addresses not physical addresses!
-                buf = dma_to_virt(&urb->dev->dev, urb->transfer_dma);
+                //buf = dma_to_virt(&urb->dev->dev, urb->transfer_dma);
 	}
 	
 	if (!(urb->transfer_flags & URB_NO_INTERRUPT))

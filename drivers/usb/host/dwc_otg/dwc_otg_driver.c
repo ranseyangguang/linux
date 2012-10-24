@@ -76,7 +76,6 @@
 #elif defined(PLATFORM_INTERFACE)
 
 #include <linux/platform_device.h>
-#include <asm/mach/map.h>
 
 #endif
 
@@ -985,7 +984,7 @@ static struct pci_driver dwc_otg_driver = {
 #elif defined(PLATFORM_INTERFACE)
 static struct platform_device_id platform_ids[] = {
         {
-              .name = "bcm2708_usb",
+              .name = "dwc_otg",
               .driver_data = (kernel_ulong_t) 0xdeadbeef,
         },
         { /* end: all zeroes */ }
