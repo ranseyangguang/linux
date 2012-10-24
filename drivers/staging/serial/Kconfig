@@ -14,3 +14,33 @@ config SERIAL_68360
 	bool
 	depends on SERIAL_68360_SMC || SERIAL_68360_SCC
 	default y
+
+config AM_UART
+        bool "Amlogic Uart support"
+        default y
+	select SERIAL_CORE
+	select SERIAL_CORE_CONSOLE
+        depends on ARC_PLAT_AML8626X
+        help
+           hardware uart
+
+choice
+        prompt "---SET UART0 PORT"
+        default AM_UART0_SET_PORT_A
+
+config AM_UART0_SET_PORT_A
+        bool "uart port A"
+        select SERIAL_CORE
+        select SERIAL_CORE_CONSOLE
+        help
+           DB9 connector is UART 0/ttyS0
+
+config AM_UART0_SET_PORT_B
+        bool "uart port B"
+        select SERIAL_CORE
+        select SERIAL_CORE_CONSOLE
+        help
+           DB9 connector is UART 1/ttyS1
+
+endchoice
+
