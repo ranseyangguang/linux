@@ -121,6 +121,7 @@ config ARC_PLAT_HAPS51
 
 config ARC_PLAT_AML8626X
 	bool "Synopsys development board based on AML8626X"
+	select USB_ARCH_HAS_HCD
 	help
 	  This adds support for the Synopsys development board with
 	  AML8626X customer silicon on it.
