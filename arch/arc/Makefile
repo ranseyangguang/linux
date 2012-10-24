@@ -14,6 +14,7 @@ KBUILD_DEFCONFIG := fpga_defconfig
 # This list is sorted alphanumerically by CONFIG_* macro name.
 platform-$(CONFIG_ARC_PLAT_FPGA_LEGACY)	:= arcfpga
 platform-$(CONFIG_ARC_PLAT_HAPS51)	:= haps51
+platform-$(CONFIG_ARC_PLAT_AML8626X)	:= aml8626x
 # !! A new platform should be added here.
 
 PLATFORM := $(platform-y)

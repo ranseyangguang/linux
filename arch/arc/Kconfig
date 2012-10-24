@@ -119,6 +119,12 @@ config ARC_PLAT_HAPS51
 	help
 	  Various Synopsys subsystem platforms are supported from within.
 
+config ARC_PLAT_AML8626X
+	bool "Synopsys development board based on AML8626X"
+	help
+	  This adds support for the Synopsys development board with
+	  AML8626X customer silicon on it.
+
 #New platform adds here
 endchoice
 
@@ -363,6 +369,7 @@ menu "Platform Board Configuration"
 
 source "arch/arc/plat-arcfpga/Kconfig"
 source "arch/arc/plat-haps51/Kconfig"
+source "arch/arc/plat-aml8626x/Kconfig"
 
 #New platform adds here
 
