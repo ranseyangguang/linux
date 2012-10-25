@@ -19,8 +19,8 @@
 #include "c_stb_define.h" //yvonne added
 #include "dmc.h"
 
-#define IO_READ32(x)	ioread32(x)
-#define IO_WRITE32(x,y)	iowrite32(x,y)
+#define IO_READ32(x)	ioread32((void __iomem *) (x))
+#define IO_WRITE32(x,y)	iowrite32((x),(void __iomem *) (y))
 #define IO_CBUS_BASE            0xc1100000
 #define IO_AXI_BUS_BASE         0xc1300000
 #define IO_AHB_BUS_BASE         0xc9000000

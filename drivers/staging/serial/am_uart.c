@@ -65,11 +65,11 @@ static struct tty_driver *am_uart_driver;
 #define MAX_NAMED_UART 4
 
 #ifndef outl
-#define outl(v,addr)    __raw_writel(v,(unsigned long)addr)
+#define outl(v,addr)    __raw_writel(v,(volatile void *)addr)
 #endif
 
 #ifndef inl
-#define inl(addr)   __raw_readl((unsigned long)addr)
+#define inl(addr)   __raw_readl((volatile void *)addr)
 #endif
 #define in_l(addr)  inl((unsigned long )addr)
 #define out_l(v,addr)   outl(v,(unsigned long )addr)

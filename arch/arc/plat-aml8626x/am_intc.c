@@ -41,7 +41,7 @@ void __init am_intc_init(void)
 static void am_intc_change_int(int irq, bool enable)
 {
 	int irq_set, reg;
-	u32 mask;
+	long unsigned int mask;
 
 	irq -= CORE_IRQ;
 	irq_set = irq >> 5;	/* which set of IRQ registers? */
@@ -70,7 +70,7 @@ void am_intc_disable_int(int irq)
  */
 irqreturn_t am_intc_do_handle_irq(int irq, void *arg)
 {
-	u32 intsrc[IRQ_SETS];
+	long unsigned int intsrc[IRQ_SETS];
 	int irq_set, intnum, result;
 	int rc = -1;
 
