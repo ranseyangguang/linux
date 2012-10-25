@@ -29,6 +29,7 @@
 #include <linux/pci.h>
 
 #include <linux/version.h>
+#include <asm-generic/sizes.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
 # include <linux/irq.h>
@@ -76,7 +77,6 @@
 
 #ifdef PLATFORM_INTERFACE
 #include <linux/platform_device.h>
-#include <asm/mach/map.h>
 #endif
 
 /** The OS page size */
