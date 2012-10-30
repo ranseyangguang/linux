@@ -73,12 +73,57 @@ static struct platform_device dwc_otg_b_dev = {
 };
 #endif /* CONFIG_USB_DWCOTG */
 /* ------------------------------------------------------------------------- */
+#define OSD1_ADDR_START	0x90000000
+#define OSD1_ADDR_END	0x90ffffff
+#define OSD2_ADDR_START	0x91000000
+#define OSD2_ADDR_END	0x91ffffff
 
+static struct resource apollofb_device_resources[] = {
+    [0] = {
+        .start = AM_ISA_GEN_IRQ(INT_VIU_VSYNC),
+        .end   = AM_ISA_GEN_IRQ(INT_VIU_VSYNC),
+        .flags = IORESOURCE_IRQ,
+    },
+    [1] = {
+        .start = OSD1_ADDR_START,
+        .end   = OSD1_ADDR_END,
+        .flags = IORESOURCE_MEM,
+    },
+    [2] = { //for osd2
+        .start = OSD2_ADDR_START,
+        .end   = OSD2_ADDR_END,
+        .flags = IORESOURCE_MEM,
+    },
+};
+
+static struct platform_device apollofb_device = {
+    .name       = "amlfb",
+    .id         = 0,
+    .num_resources = ARRAY_SIZE(apollofb_device_resources),
+    .resource      = apollofb_device_resources,
+};
+
+static struct resource vout_device_resources[] = {
+    [0] = {
+        .start = 0,
+        .end   = 0,
+        .flags = IORESOURCE_MEM,
+    },
+};
+
+static struct platform_device vout_device = {
+    .name       = "amlvout",
+    .id         = 0,
+    .num_resources = ARRAY_SIZE(vout_device_resources),
+    .resource      = vout_device_resources,
+};
 static struct platform_device *dw_platform_devices[] __initdata = {
 #ifdef CONFIG_USB_DWCOTG
 	&dwc_otg_a_dev,
 	&dwc_otg_b_dev,
 #endif /* CONFIG_USB_DWCOTG */
+	&vout_device,
+	&apollofb_device,
 };
 
 int __init dw_platform_init(void)

@@ -132,4 +132,6 @@ source "drivers/staging/nvec/Kconfig"
 
 source "drivers/staging/media/Kconfig"
 
+source "drivers/staging/aml_fb/Kconfig"
+
 endif # STAGING
