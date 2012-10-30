@@ -1,0 +1,16 @@
+#
+# Sensor device configuration
+#
+
+config AM_NAND
+	bool "Amlogic NAND FLASH SUPPORT"
+	default y
+	select BLOCK
+	select MTD
+        select MTD_NAND 
+	select MTD_PARTITIONS
+        select MTD_BLOCK
+        select MTD_CHAR
+        help
+		This is AML8626X NAND support
+

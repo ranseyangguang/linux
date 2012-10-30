@@ -12,6 +12,12 @@
 #include <linux/err.h>
 #include <linux/io.h>
 #include <linux/dma-mapping.h>
+
+#include <linux/mtd/mtd.h>
+#include <linux/mtd/partitions.h>
+#include <linux/mtd/nand.h>
+#include <linux/mtd/nand_ecc.h>
+
 #include <asm-generic/sizes.h>
 
 #include <asm/irq.h>
@@ -19,6 +25,7 @@
 #include <plat/memmap.h>
 #include <plat/am_regs.h>
 #include <plat/usbclock.h>
+#include <plat/nand.h>
 
 /* ------------------------------------------------------------------------- */
 #ifdef CONFIG_USB_DWCOTG
@@ -117,6 +124,114 @@ static struct platform_device vout_device = {
     .num_resources = ARRAY_SIZE(vout_device_resources),
     .resource      = vout_device_resources,
 };
+
+
+#if defined(CONFIG_AM_NAND)
+static struct mtd_partition multi_partition_info[] = {
+    {
+        .name = "environment",
+        .offset = 8 * 1024 * 1024,
+        .size = 40 * 1024 * 1024,
+    },
+    {
+        .name = "logo",
+        .offset = 48 * 1024 * 1024,
+        .size = 16 * 1024 * 1024,
+    },
+    {
+        .name = "recovery",
+        .offset = 64 * 1024 * 1024,
+        .size = 16 * 1024 * 1024,
+    },
+    {
+        .name = "uImage",
+        .offset = 80 * 1024 * 1024,
+        .size = 16 * 1024 * 1024,
+    },
+    {
+        .name = "system",
+        .offset = 96 * 1024 * 1024,
+        .size = 256 * 1024 * 1024,
+    },
+    {
+        .name = "cache",
+        .offset = 352 * 1024 * 1024,
+        .size = 40 * 1024 * 1024,
+    },
+    {
+        .name = "userdata",
+        .offset = 392 * 1024 * 1024,
+        .size = 512 * 1024 * 1024,
+    },
+    {
+        .name = "NFTL_Part",
+        .offset = ((392 + 512) * 1024 * 1024),
+        .size = (((uint64_t)0x40000000 - (392 + 512) * 1024 * 1024)),
+    },
+};
+
+
+static struct aml_nand_platform aml_nand_mid_platform[] = {
+    /*{
+        .name = NAND_BOOT_NAME,
+        .chip_enable_pad = AML_NAND_CE0,
+        .ready_busy_pad = AML_NAND_CE0,
+        .platform_nand_data = {
+            .chip =  {
+                .nr_chips = 1,
+                .options = (NAND_TIMING_MODE5 | NAND_ECC_BCH60_MODE),
+            },
+        },
+        .rbpin_mode=1,
+        .short_pgsz=384,
+        .ran_mode=0,
+        .T_REA = 20,
+        .T_RHOH = 15,
+    },*/
+    {
+        .name = NAND_MULTI_NAME,
+        .chip_enable_pad = (AML_NAND_CE0) ,  //| (AML_NAND_CE1 << 4) | (AML_NAND_CE2 << 8) | (AML_NAND_CE3 << 12)),
+        .ready_busy_pad = (AML_NAND_CE0) ,  //| (AML_NAND_CE0 << 4) | (AML_NAND_CE1 << 8) | (AML_NAND_CE1 << 12)),
+        .platform_nand_data = {
+            .chip =  {
+                .nr_chips = 1,
+                .nr_partitions = ARRAY_SIZE(multi_partition_info),
+                .partitions = multi_partition_info,
+		.options = (NAND_TIMING_MODE5 | NAND_ECC_BCH30_MODE),
+            },
+        },
+        .rbpin_mode = 1,
+        .short_pgsz = 0,
+        .ran_mode = 0,
+        .T_REA = 20,
+        .T_RHOH = 15,
+    }
+};
+
+struct aml_nand_device aml_nand_mid_device = {
+    .aml_nand_platform = aml_nand_mid_platform,
+    .dev_num = ARRAY_SIZE(aml_nand_mid_platform),
+};
+
+static struct resource aml_nand_resources[] = {
+    {
+        .start = 0xc1108600,
+        .end = 0xc1108624,
+        .flags = IORESOURCE_MEM,
+    },
+};
+
+static struct platform_device a3_nand_device = {
+    .name = "aml_a3_nand",
+    .id = 0,
+    .num_resources = ARRAY_SIZE(aml_nand_resources),
+    .resource = aml_nand_resources,
+    .dev = {
+        .platform_data = &aml_nand_mid_device,
+    },
+};
+#endif
+
 static struct platform_device *dw_platform_devices[] __initdata = {
 #ifdef CONFIG_USB_DWCOTG
 	&dwc_otg_a_dev,
@@ -124,6 +239,9 @@ static struct platform_device *dw_platform_devices[] __initdata = {
 #endif /* CONFIG_USB_DWCOTG */
 	&vout_device,
 	&apollofb_device,
+#ifdef CONFIG_AM_NAND
+	&a3_nand_device,
+#endif
 };
 
 int __init dw_platform_init(void)
