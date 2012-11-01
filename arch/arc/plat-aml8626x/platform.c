@@ -26,6 +26,7 @@
 #include <plat/am_regs.h>
 #include <plat/usbclock.h>
 #include <plat/nand.h>
+#include <plat/card_io.h>
 
 /* ------------------------------------------------------------------------- */
 #ifdef CONFIG_USB_DWCOTG
@@ -125,6 +126,55 @@ static struct platform_device vout_device = {
     .resource      = vout_device_resources,
 };
 
+
+#if defined(CONFIG_CARDREADER)
+
+static struct resource amlogic_card_resource[]  = {
+    [0] = {
+        .start = 0x1200230,   //physical address
+        .end   = 0x120024c,
+        .flags = 0x200,
+    }
+};
+
+
+static struct aml_card_info  amlogic_card_info[] = {
+    [0] = {
+        .name = "sd_card",
+        .work_mode = CARD_HW_MODE,
+        .io_pad_type = SDIO_GPIOB_0_5,
+        .card_ins_en_reg = EGPIO_GPIOD_ENABLE,
+        .card_ins_en_mask = PREG_IO_18_MASK,
+        .card_ins_input_reg = EGPIO_GPIOD_INPUT,
+        .card_ins_input_mask = PREG_IO_18_MASK,
+        .card_power_en_reg = 0,
+        .card_power_en_mask = 0,
+        .card_power_output_reg = 0,
+        .card_power_output_mask = 0,
+        .card_power_en_lev = 0,
+        .card_wp_en_reg = EGPIO_GPIOD_ENABLE,
+        .card_wp_en_mask = PREG_IO_19_MASK,
+        .card_wp_input_reg = EGPIO_GPIOD_INPUT,
+        .card_wp_input_mask = PREG_IO_19_MASK,
+        .card_extern_init = 0,
+    },
+};
+
+static struct aml_card_platform amlogic_card_platform = {
+    .card_num = ARRAY_SIZE(amlogic_card_info),
+    .card_info = amlogic_card_info,
+};
+
+static struct platform_device amlogic_card_device = {
+    .name = "AMLOGIC_CARD",
+    .id    = -1,
+    .num_resources = ARRAY_SIZE(amlogic_card_resource),
+    .resource = amlogic_card_resource,
+    .dev = {
+        .platform_data = &amlogic_card_platform,
+    },
+};
+#endif
 
 #if defined(CONFIG_AM_NAND)
 static struct mtd_partition multi_partition_info[] = {
@@ -239,6 +289,9 @@ static struct platform_device *dw_platform_devices[] __initdata = {
 #endif /* CONFIG_USB_DWCOTG */
 	&vout_device,
 	&apollofb_device,
+#if defined(CONFIG_CARDREADER)
+    &amlogic_card_device,
+#endif
 #ifdef CONFIG_AM_NAND
 	&a3_nand_device,
 #endif

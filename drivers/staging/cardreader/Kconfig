@@ -1,0 +1,16 @@
+#
+# cardreader subsystem configuration
+#
+
+menu "Amlogic Card support"
+
+config CARDREADER
+	bool "Card reader support "
+	default n
+
+config SD_MMC
+	bool "SD/MMC card driver support"
+	default y
+	depends on CARDREADER
+
+endmenu
