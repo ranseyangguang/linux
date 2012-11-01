@@ -188,13 +188,13 @@ dwc_otg_core_if_t *dwc_otg_cil_init(const uint32_t * reg_base_addr)
 		gusbcfg.d32 =  DWC_READ_REG32(&core_if->core_global_regs->gusbcfg);
 		gusbcfg.b.force_host_mode = 1;
 		DWC_WRITE_REG32(&core_if->core_global_regs->gusbcfg, gusbcfg.d32);
-		dwc_mdelay(100); 
+		dwc_mdelay(10); 
 		core_if->hptxfsiz.d32 =
 		DWC_READ_REG32(&core_if->core_global_regs->hptxfsiz);
 		gusbcfg.d32 =  DWC_READ_REG32(&core_if->core_global_regs->gusbcfg);
 		gusbcfg.b.force_host_mode = 0;
 		DWC_WRITE_REG32(&core_if->core_global_regs->gusbcfg, gusbcfg.d32);
-		dwc_mdelay(100); 
+		dwc_mdelay(10); 
 	}
 
 	DWC_DEBUGPL(DBG_CILV, "hwcfg1=%08x\n", core_if->hwcfg1.d32);
@@ -657,7 +657,7 @@ int dwc_otg_host_hibernation_restore(dwc_otg_core_if_t * core_if,
 	/* This step is not described in functional spec but if not wait for this
 	 * delay, mismatch interrupts occurred because just after restore core is
 	 * in Device mode(gintsts.curmode == 0) */
-	dwc_mdelay(100);
+	dwc_mdelay(10);
 
 	/* Clear all pending interrupts */
 	DWC_WRITE_REG32(&core_if->core_global_regs->gintsts, 0xFFFFFFFF);
@@ -5124,7 +5124,7 @@ void dwc_otg_core_reset(dwc_otg_core_if_t * core_if)
 	while (greset.b.csftrst == 1);
 
 	/* Wait for 3 PHY Clocks */
-	dwc_mdelay(100);
+	dwc_mdelay(30);
 }
 
 uint8_t dwc_otg_is_device_mode(dwc_otg_core_if_t * _core_if)
