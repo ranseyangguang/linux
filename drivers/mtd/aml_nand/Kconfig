@@ -6,7 +6,6 @@ config AM_NAND
 	bool "Amlogic NAND FLASH SUPPORT"
 	default y
 	select BLOCK
-	select MTD
         select MTD_NAND 
 	select MTD_PARTITIONS
         select MTD_BLOCK

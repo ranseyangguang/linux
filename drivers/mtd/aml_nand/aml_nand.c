@@ -1047,15 +1047,17 @@ static int aml_platform_dma_write(struct aml_nand_chip *aml_chip, unsigned char 
 		count = 1;
 	}	
 
-	wmb();
 	data_dma_addr = dma_map_single(aml_chip->device, data_dma_buf, len, DMA_TO_DEVICE);	
 	user_data_dma_addr = dma_map_single(aml_chip->device, (void *) aml_chip->user_info_buf,
-					    count * PER_INFO_BYTE, DMA_TO_DEVICE);
+					    count * PER_INFO_BYTE, DMA_BIDIRECTIONAL);
 
 	NFC_SEND_CMD_ADL(data_dma_addr);
 	NFC_SEND_CMD_ADH(data_dma_addr);
 	NFC_SEND_CMD_AIL(user_data_dma_addr);
-	NFC_SEND_CMD_AIH(user_data_dma_addr);	
+	NFC_SEND_CMD_AIH(user_data_dma_addr);
+
+	wmb();
+
 	if (!bch_mode) {
 		NFC_SEND_CMD_M2N_RAW(aml_chip->ran_mode,len);
 	} else {
@@ -1063,8 +1065,11 @@ static int aml_platform_dma_write(struct aml_nand_chip *aml_chip, unsigned char 
 	}
 
 	ret = aml_platform_dma_waiting(aml_chip);
-	dma_unmap_single(aml_chip->device, data_dma_addr, len, DMA_FROM_DEVICE);
-	dma_unmap_single(aml_chip->device, user_data_dma_addr, count * PER_INFO_BYTE, DMA_FROM_DEVICE);
+
+	rmb();
+
+	dma_unmap_single(aml_chip->device, data_dma_addr, len, DMA_TO_DEVICE);
+	dma_unmap_single(aml_chip->device, user_data_dma_addr, count * PER_INFO_BYTE, DMA_BIDIRECTIONAL);
 
 	return ret;		 
 }
@@ -1103,11 +1108,14 @@ static int aml_platform_dma_read(struct aml_nand_chip *aml_chip, unsigned char *
 		
 	data_dma_addr = dma_map_single(aml_chip->device, data_dma_buf, len, DMA_FROM_DEVICE);	
 	user_data_dma_addr = dma_map_single(aml_chip->device, (void *)aml_chip->user_info_buf,
-					    count * PER_INFO_BYTE, DMA_FROM_DEVICE);
+					    count * PER_INFO_BYTE, DMA_BIDIRECTIONAL);
 	NFC_SEND_CMD_ADL(data_dma_addr);
 	NFC_SEND_CMD_ADH(data_dma_addr);
 	NFC_SEND_CMD_AIL(user_data_dma_addr);
 	NFC_SEND_CMD_AIH(user_data_dma_addr);	
+
+	wmb();
+
 	if(!bch_mode) {
 		NFC_SEND_CMD_N2M_RAW(aml_chip->ran_mode,len);
 	} else {
@@ -1127,12 +1135,13 @@ static int aml_platform_dma_read(struct aml_nand_chip *aml_chip, unsigned char *
 				);
 	} while (!(cmp & 0x80000000));
 
+	rmb();
+
 	dma_unmap_single(aml_chip->device, data_dma_addr, len, DMA_FROM_DEVICE);
-	dma_unmap_single(aml_chip->device, user_data_dma_addr, count * PER_INFO_BYTE,DMA_FROM_DEVICE);
+	dma_unmap_single(aml_chip->device, user_data_dma_addr, count * PER_INFO_BYTE, DMA_BIDIRECTIONAL);
 
 	if (bounce)
 		memcpy(buf, data_dma_buf, len);
-	
 
 	return 0;
 }
@@ -2118,6 +2127,7 @@ ecc_unit_change:
 			break;
 
 		case NAND_ECC_BCH30_MODE:
+			printk ("selecting NAND_ECC_BCH30\n");
 			chip->ecc.size = NAND_ECC_UNIT_1KSIZE;
 			chip->ecc.bytes = NAND_BCH30_ECC_SIZE;
 			aml_chip->bch_mode = NAND_ECC_BCH30;
@@ -2401,7 +2411,6 @@ int aml_nand_init(struct aml_nand_chip *aml_chip)
 			aml_chip->bch_mode = 0;
 			break;
 	}
-	printk ("chip->controller==%p\n", chip->controller);
 
 	if (!aml_chip->aml_nand_hw_init)
 		aml_chip->aml_nand_hw_init = aml_platform_hw_init;
@@ -2439,7 +2448,6 @@ int aml_nand_init(struct aml_nand_chip *aml_chip)
 		else
 			chip->ecc.layout = &aml_nand_oob_64;
 	}
-	printk ("chip->controller==%p\n", chip->controller);
 
 	chip->select_chip = aml_nand_select_chip;
 	chip->cmd_ctrl = aml_nand_cmd_ctrl;
@@ -2462,9 +2470,6 @@ int aml_nand_init(struct aml_nand_chip *aml_chip)
 			aml_chip->ops_mode = AML_MULTI_CHIP_SHARE_RB;
 		}*/
 	}
-
-	dev_dbg(aml_chip->device, "Allocating buffers mtd->writesize %d mtd->oobsize %d\n", mtd->writesize, mtd->oobsize);
-	printk ("chip->controller==%p\n", chip->controller);
 
 //	aml_chip->aml_nand_data_buf = dma_alloc_coherent(aml_chip->device, (mtd->writesize + mtd->oobsize), &aml_chip->data_dma_addr, GFP_KERNEL);
 //	aml_chip->aml_nand_data_buf=kzalloc((mtd->writesize + mtd->oobsize+64),GFP_KERNEL);
@@ -2532,7 +2537,6 @@ int aml_nand_init(struct aml_nand_chip *aml_chip)
 
 	mtd->suspend = aml_nand_suspend;
 	mtd->resume = aml_nand_resume;
-	printk ("chip->controller==%p\n", chip->controller);
 
 	if (chip->ecc.mode != NAND_ECC_SOFT) {
 		if (aml_chip->aml_nand_options_confirm(aml_chip)) {
