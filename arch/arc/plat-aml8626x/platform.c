@@ -284,7 +284,13 @@ static struct platform_device a3_nand_device = {
 
 static struct platform_device *dw_platform_devices[] __initdata = {
 #ifdef CONFIG_USB_DWCOTG
+
+/* dwc_otg_a is for the USB mini a/b otg connector. As long as this feature
+   is not used, we don't load this controller, as initialization takes ~530 ms
+   at boot time. */
+#ifdef CONFIG_USB_GADGET
 	&dwc_otg_a_dev,
+#endif
 	&dwc_otg_b_dev,
 #endif /* CONFIG_USB_DWCOTG */
 	&vout_device,
