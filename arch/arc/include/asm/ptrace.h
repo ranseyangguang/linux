@@ -132,6 +132,14 @@ struct user_regs_struct {
 	(struct pt_regs *)(pg_start + THREAD_SIZE - 4) - 1;	\
 })
 
+#define user_stack_pointer(regs)\
+({  unsigned int sp;		\
+	if (user_mode(regs))	\
+		sp = (regs)->sp;\
+	else			\
+		sp = -1;	\
+	sp;			\
+})
 #endif /* !__ASSEMBLY__ */
 
 #define orig_r8_IS_SCALL		0x0001
