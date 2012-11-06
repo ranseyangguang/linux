@@ -14,6 +14,7 @@
 #include <linux/proc_fs.h>
 #include <linux/file.h>
 #include <asm/arcregs.h>
+#include <asm/event-log.h>
 
 /*
  * Common routine to print scratch regs (r0-r12) or callee regs (r13-r25)
@@ -209,6 +210,8 @@ void show_kernel_fault_diag(const char *str, struct pt_regs *regs,
 	/* Show stack trace if this Fatality happened in kernel mode */
 	if (!user_mode(regs))
 		show_stacktrace(current, regs);
+
+	sort_snaps(1);
 }
 
 #ifdef CONFIG_DEBUG_FS
