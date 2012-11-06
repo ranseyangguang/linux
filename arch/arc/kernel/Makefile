@@ -9,7 +9,7 @@
 CFLAGS_ptrace.o		+= -DUTS_MACHINE='"$(UTS_MACHINE)"'
 
 obj-y	:= arcksyms.o setup.o irq.o time.o reset.o ptrace.o entry.o process.o \
-	   signal.o traps.o sys.o troubleshoot.o stacktrace.o clk.o
+	   signal.o traps.o sys.o troubleshoot.o stacktrace.o disasm.o clk.o
 
 obj-$(CONFIG_MODULES)			+= arcksyms.o module.o
 obj-$(CONFIG_SMP) 			+= smp.o
