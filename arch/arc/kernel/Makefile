@@ -13,6 +13,7 @@ obj-y	+= signal.o traps.o sys.o troubleshoot.o stacktrace.o disasm.o clk.o
 
 obj-$(CONFIG_OF)			+= devtree.o
 obj-$(CONFIG_MODULES)			+= arcksyms.o module.o
+obj-$(CONFIG_ARC_DBG_EVENT_TIMELINE)	+= event-log.o
 obj-$(CONFIG_SMP) 			+= smp.o
 obj-$(CONFIG_ARC_DW2_UNWIND)		+= unwind.o
 obj-$(CONFIG_KPROBES)      		+= kprobes.o

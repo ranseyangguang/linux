@@ -146,6 +146,7 @@ VECTOR   reserved                ; Reserved Exceptions
 #include <asm/errno.h>
 #include <asm/arcregs.h>
 #include <asm/irqflags.h>
+#include <asm/event-log-asm.h>
 
 ;##################### Scratch Mem for IRQ stack switching #############
 
@@ -211,6 +212,8 @@ ARC_ENTRY handle_interrupt_level2
 	st      r9, [r10, THREAD_INFO_PREEMPT_COUNT]
 
 1:
+	TAKE_SNAP_C_FROM_ASM  SNAP_INTR_IN2
+
 	;------------------------------------------------------
 	; setup params for Linux common ISR and invoke it
 	;------------------------------------------------------
@@ -247,6 +250,9 @@ ARC_ENTRY handle_interrupt_level1
 	SWITCH_TO_KERNEL_STK
 	SAVE_ALL_INT1
 
+	; snapshot routine takes care of disabling nested intr
+	TAKE_SNAP_C_FROM_ASM  SNAP_INTR_IN
+
 	lr  r0, [icause1]
 	and r0, r0, 0x1f
 
@@ -268,6 +274,8 @@ ARC_EXIT handle_interrupt_level1
 ARC_ENTRY instr_service
 
 	EXCPN_PROLOG_FREEUP_REG r9
+
+	TAKE_SNAP_ASM r8, r9, SNAP_EXCP_IN
 
 	lr  r9, [erstatus]
 
@@ -292,6 +300,8 @@ ARC_EXIT instr_service
 ARC_ENTRY mem_service
 
 	EXCPN_PROLOG_FREEUP_REG r9
+
+	TAKE_SNAP_ASM r8, r9, SNAP_EXCP_IN
 
 	lr  r9, [erstatus]
 
@@ -343,6 +353,8 @@ ARC_EXIT EV_MachineCheck
 ARC_ENTRY EV_TLBProtV
 
 	EXCPN_PROLOG_FREEUP_REG r9
+
+	TAKE_SNAP_ASM r8, r9, SNAP_EXCP_IN
 
 	;Which mode (user/kernel) was the system in when Exception occured
 	lr  r9, [erstatus]
@@ -411,6 +423,8 @@ ARC_EXIT EV_TLBProtV
 ARC_ENTRY EV_PrivilegeV
 
 	EXCPN_PROLOG_FREEUP_REG r9
+
+	TAKE_SNAP_ASM r8, r9, SNAP_EXCP_IN
 
 	lr  r9, [erstatus]
 
@@ -537,6 +551,8 @@ ARC_ENTRY EV_Trap
 
 	; Need at least 1 reg to code the early exception prolog
 	EXCPN_PROLOG_FREEUP_REG r9
+
+	TAKE_SNAP_ASM r10, r9,  SNAP_TRAP_IN
 
 	;Which mode (user/kernel) was the system in when intr occured
 	lr  r9, [erstatus]
@@ -744,6 +760,7 @@ not_exception:
 	st      r9, [r10, THREAD_INFO_PREEMPT_COUNT]
 
 149:
+	TAKE_SNAP_C_FROM_ASM SNAP_INTR_OUT2
 	;return from level 2
 	RESTORE_ALL_INT2
 debug_marker_l2:
@@ -756,6 +773,7 @@ not_level2_interrupt:
 	bbit0  r10, STATUS_A1_BIT, not_level1_interrupt
 
 	;return from level 1
+	TAKE_SNAP_C_FROM_ASM SNAP_INTR_OUT
 
 	RESTORE_ALL_INT1
 debug_marker_l1:
@@ -764,6 +782,19 @@ debug_marker_l1:
 not_level1_interrupt:
 
 	;this case is for syscalls or Exceptions (with fake rtie)
+
+#ifdef CONFIG_ARC_DBG_EVENT_TIMELINE
+	ld r8, [sp, PT_orig_r8]
+	cmp r8, NR_syscalls+1
+	jeq  149f
+	TAKE_SNAP_ASM r9, r10, SNAP_TRAP_OUT
+	j 150f
+
+149:
+	TAKE_SNAP_ASM r9, r10, SNAP_EXCP_OUT
+150:
+
+#endif
 
 	RESTORE_ALL_SYS
 debug_marker_syscall:
