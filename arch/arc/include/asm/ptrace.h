@@ -124,6 +124,14 @@ struct user_regs_struct {
 #define syscall_wont_restart(regs) (regs->orig_r8 |= orig_r8_IS_SCALL_RESTARTED)
 #define syscall_restartable(regs) !(regs->orig_r8 & orig_r8_IS_SCALL_RESTARTED)
 
+#define current_pt_regs()					\
+({								\
+	/* open-coded current_thread_info() */			\
+	register unsigned long sp asm ("sp");			\
+	unsigned long pg_start = (sp & ~(THREAD_SIZE - 1));	\
+	(struct pt_regs *)(pg_start + THREAD_SIZE - 4) - 1;	\
+})
+
 #endif /* !__ASSEMBLY__ */
 
 #define orig_r8_IS_SCALL		0x0001
