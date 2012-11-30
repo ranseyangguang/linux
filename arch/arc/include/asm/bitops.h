@@ -46,6 +46,9 @@ static inline void set_bit(unsigned long nr, volatile unsigned long *m)
 
 	m += nr >> 5;
 
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
+
 	__asm__ __volatile__(
 	"1:	llock   %0, [%1]	\n"
 	"	bset    %0, %0, %2	\n"
@@ -62,6 +65,9 @@ static inline void clear_bit(unsigned long nr, volatile unsigned long *m)
 
 	m += nr >> 5;
 
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
+
 	__asm__ __volatile__(
 	"1:	llock   %0, [%1]	\n"
 	"	bclr    %0, %0, %2	\n"
@@ -77,6 +83,9 @@ static inline void change_bit(unsigned long nr, volatile unsigned long *m)
 	unsigned int temp;
 
 	m += nr >> 5;
+
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
 
 	__asm__ __volatile__(
 	"1:	llock   %0, [%1]	\n"
@@ -105,6 +114,9 @@ static inline int test_and_set_bit(unsigned long nr, volatile unsigned long *m)
 
 	m += nr >> 5;
 
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
+
 	__asm__ __volatile__(
 	"1:	llock   %0, [%2]	\n"
 	"	bset    %1, %0, %3	\n"
@@ -113,9 +125,6 @@ static inline int test_and_set_bit(unsigned long nr, volatile unsigned long *m)
 	: "=&r"(old), "=&r"(temp)
 	: "r"(m), "ir"(nr)
 	: "cc");
-
-	if (__builtin_constant_p(nr))
-		nr &= 0x1f;
 
 	return (old & (1 << nr)) != 0;
 }
@@ -127,6 +136,9 @@ test_and_clear_bit(unsigned long nr, volatile unsigned long *m)
 
 	m += nr >> 5;
 
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
+
 	__asm__ __volatile__(
 	"1:	llock   %0, [%2]	\n"
 	"	bclr    %1, %0, %3	\n"
@@ -135,9 +147,6 @@ test_and_clear_bit(unsigned long nr, volatile unsigned long *m)
 	: "=&r"(old), "=&r"(temp)
 	: "r"(m), "ir"(nr)
 	: "cc");
-
-	if (__builtin_constant_p(nr))
-		nr &= 0x1f;
 
 	return (old & (1 << nr)) != 0;
 }
@@ -149,6 +158,9 @@ test_and_change_bit(unsigned long nr, volatile unsigned long *m)
 
 	m += nr >> 5;
 
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
+
 	__asm__ __volatile__(
 	"1:	llock   %0, [%2]	\n"
 	"	bxor    %1, %0, %3	\n"
@@ -157,9 +169,6 @@ test_and_change_bit(unsigned long nr, volatile unsigned long *m)
 	: "=&r"(old), "=&r"(temp)
 	: "r"(m), "ir"(nr)
 	: "cc");
-
-	if (__builtin_constant_p(nr))
-		nr &= 0x1f;
 
 	return (old & (1 << nr)) != 0;
 }
@@ -172,6 +181,9 @@ static inline void set_bit(unsigned long nr, volatile unsigned long *m)
 {
 	unsigned long temp, flags;
 	m += nr >> 5;
+
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
 
 	bitops_lock(flags);
 
@@ -190,6 +202,9 @@ static inline void clear_bit(unsigned long nr, volatile unsigned long *m)
 	unsigned long temp, flags;
 	m += nr >> 5;
 
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
+
 	bitops_lock(flags);
 
 	__asm__ __volatile__(
@@ -206,6 +221,9 @@ static inline void change_bit(unsigned long nr, volatile unsigned long *m)
 {
 	unsigned long temp, flags;
 	m += nr >> 5;
+
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
 
 	bitops_lock(flags);
 
@@ -224,6 +242,9 @@ static inline int test_and_set_bit(unsigned long nr, volatile unsigned long *m)
 	unsigned long old, temp, flags;
 	m += nr >> 5;
 
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
+
 	bitops_lock(flags);
 
 	old = *m;
@@ -236,9 +257,6 @@ static inline int test_and_set_bit(unsigned long nr, volatile unsigned long *m)
 
 	bitops_unlock(flags);
 
-	if (__builtin_constant_p(nr))
-		nr &= 0x1f;
-
 	return (old & (1 << nr)) != 0;
 }
 
@@ -247,6 +265,9 @@ test_and_clear_bit(unsigned long nr, volatile unsigned long *m)
 {
 	unsigned long temp, old, flags;
 	m += nr >> 5;
+
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
 
 	bitops_lock(flags);
 
@@ -260,9 +281,6 @@ test_and_clear_bit(unsigned long nr, volatile unsigned long *m)
 
 	bitops_unlock(flags);
 
-	if (__builtin_constant_p(nr))
-		nr &= 0x1f;
-
 	return (old & (1 << nr)) != 0;
 }
 
@@ -271,6 +289,9 @@ test_and_change_bit(unsigned long nr, volatile unsigned long *m)
 {
 	unsigned long temp, old, flags;
 	m += nr >> 5;
+
+	if (__builtin_constant_p(nr))
+		nr &= 0x1f;
 
 	bitops_lock(flags);
 
@@ -283,9 +304,6 @@ test_and_change_bit(unsigned long nr, volatile unsigned long *m)
 	: "ir"(nr), "r"(old));
 
 	bitops_unlock(flags);
-
-	if (__builtin_constant_p(nr))
-		nr &= 0x1f;
 
 	return (old & (1 << nr)) != 0;
 }
