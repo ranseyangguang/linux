@@ -39,7 +39,7 @@ void *dma_alloc_coherent(struct device *dev, size_t size,
 	if (!size || (size >> PAGE_SHIFT) > num_physpages)
 		return NULL;
 
-	flag |= GFP_DMA | __GFP_HIGHMEM;
+	flag |= GFP_DMA;
 
 	/* This is linear addr (0x8000_0000 based) */
 	page_addr = __get_free_pages(flag, get_order(size));
