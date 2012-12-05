@@ -17,59 +17,30 @@
 #include <asm/tlbflush.h>
 #include <asm/pgtable.h>
 
-void __iomem *__ioremap(unsigned long phys_addr, unsigned long size,
-			unsigned long uncached)
+/*
+ * ioremap with access flags
+ * Cache semantics wise it is same as ioremap - "forced" uncached.
+ * However unline vanilla ioremap which bypasses ARC MMU for addresses in
+ * ARC hardware uncached region, this one still goes thru the MMU as caller
+ * might need finer access control (R/W/X)
+ */
+void __iomem *ioremap_prot(phys_addr_t phys_addr, unsigned long size,
+			   unsigned long flags)
 {
 	void __iomem *addr;
 	struct vm_struct *area;
 	unsigned long offset, last_addr;
-	pgprot_t prot;
+	pgprot_t prot = __pgprot(flags);
 
-	/* Don't allow wraparound or zero size */
+	/* Don't allow wraparound, zero size */
 	last_addr = phys_addr + size - 1;
-	if (!size || last_addr < phys_addr)
+	if ((!size) || (last_addr < phys_addr))
 		return NULL;
 
-	/* If the region is h/w uncached, nothing special needed */
-	if (phys_addr >= ARC_UNCACHED_ADDR_SPACE) {
-		if (!uncached) {
-			pr_err("cached ioremap req for uncached addr [%lx]\n",
-				phys_addr);
-			return NULL;
-		} else {
-			return (void __iomem *)phys_addr;
-		}
-	}
+	/* force uncached */
+	prot = pgprot_noncached(prot);
 
-	/*
-	 * Don't allow anybody to remap normal RAM that we're using..
-	 */
-
-	/*  We are using this API to mark a portion of memory as coherent -
-	   by mapping the memory to virtual address space to enable
-	   page translation at mmu and marking the page as uncacheable
-
-	   if (phys_addr <= virt_to_phys(high_memory - 1)) {
-	   char *t_addr, *t_end;
-	   struct page *page;
-
-	   t_addr = __va(phys_addr);
-	   t_end = t_addr + (size - 1);
-
-	   for(page = virt_to_page(t_addr); page <= virt_to_page(t_end); page++)
-	   if(!PageReserved(page))
-	   return NULL;
-	   }
-	 */
-
-	if (uncached)
-		prot = PAGE_KERNEL_NO_CACHE;
-	else
-		prot = PAGE_KERNEL;
-
-	/*
-	 * Mappings have to be page-aligned
-	 */
+	/* Mappings have to be page-aligned */
 	offset = phys_addr & ~PAGE_MASK;
 	phys_addr &= PAGE_MASK;
 	size = PAGE_ALIGN(last_addr + 1) - phys_addr;
@@ -89,6 +60,38 @@ void __iomem *__ioremap(unsigned long phys_addr, unsigned long size,
 	}
 	return (void __iomem *)(offset + (char __iomem *)addr);
 }
+EXPORT_SYMBOL(ioremap_prot);
+
+void __iomem *__ioremap(unsigned long phys_addr, unsigned long size,
+			unsigned long uncached)
+{
+	unsigned long last_addr;
+	pgprot_t prot;
+
+	/* Don't allow wraparound or zero size */
+	last_addr = phys_addr + size - 1;
+	if (!size || last_addr < phys_addr)
+		return NULL;
+
+	/* If the region is h/w uncached, nothing special needed */
+	if (phys_addr >= ARC_UNCACHED_ADDR_SPACE) {
+		if (!uncached) {
+			pr_err("cached ioremap req for uncached addr [%lx]\n",
+				phys_addr);
+			return NULL;
+		} else {
+			return (void __iomem *)phys_addr;
+		}
+	}
+
+	if (uncached)
+		prot = PAGE_KERNEL_NO_CACHE;
+	else
+		prot = PAGE_KERNEL;
+
+	return ioremap_prot(phys_addr, size, prot);
+}
+
 EXPORT_SYMBOL(__ioremap);
 
 void iounmap(const void __iomem *addr)

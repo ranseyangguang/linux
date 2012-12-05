@@ -20,6 +20,9 @@ extern void *__ioremap(unsigned long physaddr, unsigned long size,
 /* Wrokaroud the braindead drivers which don't know what to do */
 #define ioremap(phy, sz)		ioremap_nocache(phy, sz)
 
+extern void __iomem *ioremap_prot(phys_addr_t offset, unsigned long size,
+				  unsigned long flags);
+
 extern void iounmap(const void __iomem *addr);
 
 /* Change struct page to physical address */

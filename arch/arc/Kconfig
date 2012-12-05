@@ -26,6 +26,7 @@ config ARC
 	select HOTPLUG if !INITRAMFS_SOURCE=""
 	select DEVTMPFS if !INITRAMFS_SOURCE=""
 	select HAVE_IRQ_WORK
+	select HAVE_IOREMAP_PROT
 
 config RWSEM_GENERIC_SPINLOCK
 	def_bool y
