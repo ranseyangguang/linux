@@ -12,18 +12,12 @@
 #include <asm/byteorder.h>
 #include <asm/page.h>
 
-extern void *__ioremap(unsigned long physaddr, unsigned long size,
-		       unsigned long flags);
-
-#define ioremap_nocache(phy, sz)	__ioremap(phy, sz, 1)
-
-/* Wrokaroud the braindead drivers which don't know what to do */
-#define ioremap(phy, sz)		ioremap_nocache(phy, sz)
-
+extern void __iomem *ioremap(unsigned long physaddr, unsigned long size);
 extern void __iomem *ioremap_prot(phys_addr_t offset, unsigned long size,
 				  unsigned long flags);
-
 extern void iounmap(const void __iomem *addr);
+
+#define ioremap_nocache(phy, sz)	ioremap(phy, sz)
 
 /* Change struct page to physical address */
 #define page_to_phys(page)	(page_to_pfn(page) << PAGE_SHIFT)

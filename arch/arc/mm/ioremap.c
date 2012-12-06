@@ -62,49 +62,29 @@ void __iomem *ioremap_prot(phys_addr_t phys_addr, unsigned long size,
 }
 EXPORT_SYMBOL(ioremap_prot);
 
-void __iomem *__ioremap(unsigned long phys_addr, unsigned long size,
-			unsigned long uncached)
+void __iomem *ioremap(unsigned long phys_addr, unsigned long size)
 {
 	unsigned long last_addr;
-	pgprot_t prot;
 
 	/* Don't allow wraparound or zero size */
 	last_addr = phys_addr + size - 1;
 	if (!size || last_addr < phys_addr)
 		return NULL;
 
-	/* If the region is h/w uncached, nothing special needed */
-	if (phys_addr >= ARC_UNCACHED_ADDR_SPACE) {
-		if (!uncached) {
-			pr_err("cached ioremap req for uncached addr [%lx]\n",
-				phys_addr);
-			return NULL;
-		} else {
-			return (void __iomem *)phys_addr;
-		}
-	}
+	/* If the region is h/w uncached, avoid MMU mappings */
+	if (phys_addr >= ARC_UNCACHED_ADDR_SPACE)
+		return (void __iomem *)phys_addr;
 
-	if (uncached)
-		prot = PAGE_KERNEL_NO_CACHE;
-	else
-		prot = PAGE_KERNEL;
-
-	return ioremap_prot(phys_addr, size, prot);
+	return ioremap_prot(phys_addr, size, PAGE_KERNEL_NO_CACHE);
 }
 
-EXPORT_SYMBOL(__ioremap);
+EXPORT_SYMBOL(ioremap);
 
 void iounmap(const void __iomem *addr)
 {
-	struct vm_struct *p;
-
 	if (addr >= (void __iomem *)ARC_UNCACHED_ADDR_SPACE)
 		return;
 
-	p = remove_vm_area((void *)(PAGE_MASK & (unsigned long __force)addr));
-	if (!p)
-		pr_warn("iounmap: bad address %p\n", addr);
-
-	kfree(p);
+	vfree((void *)(PAGE_MASK & (unsigned long __force)addr));
 }
 EXPORT_SYMBOL(iounmap);
