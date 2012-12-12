@@ -461,16 +461,30 @@ void create_tlb(struct vm_area_struct *vma, unsigned long address, pte_t * ptep)
 void update_mmu_cache(struct vm_area_struct *vma, unsigned long vaddress,
 		      pte_t *ptep)
 {
-	/* XXX: This definitely seems useless */
-#if 0
-	BUG_ON(!pfn_valid(pte_pfn(*ptep)));
-#endif
-
-	/* XXX: This is useful - but only once during execve - check why?
-	 *  handle_mm_fault()
-	 *      __get_user_pages
-	 *          copy_strings()
-	 *              do_execve()
+	/*
+         * create_tlb() assumes that current->mm == vma->mm, hence check below
+         *
+         * Removing the check will involve making it use the values from
+         * vma->mm->context{ASID,SASID}, as opposed to MMU registers themselves.
+         * The TLB paranoid debug code will trigger false negatives as well.
+         * More importantly this might make it inconsistent with the fast-path
+         * TLB Refill handler which always installs the TLB entry for the current
+         * ASID/SASID in MMU regs.
+         *
+         * Lets see the use cases when current->mm != vma->mm
+         *  1. execve->copy_strings()->__get_user_pages->handle_mm_fault
+         *     Here VM wants to pre-install a TLB entry for user stack while
+         *     current->mm still points to pre-execve mm (hence the condition).
+         *     However the stack vaddr is soon relocated (randomization) and
+         *     move_page_tables() tries to undo that TLB entry. Thus not creating
+         *     TLB entry is not any worse.
+         *
+         *  2. ptrace(POKETEXT) causes a CoW - inserting a breakpoint in the
+         *     debugged task. This however happens in the context of debugger
+         *     (hence the consition). If create_tlb() doesn't happen - it will
+         *     happen when the task starts to run - no no big deal if not done.
+         *
+         * Both the cases above are not good enough for code churn.
 	 */
 	if (current->active_mm != vma->vm_mm)
 		return;
