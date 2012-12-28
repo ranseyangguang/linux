@@ -81,7 +81,8 @@ struct pt_regs {
 	long r0;
 	long sp;	/* user/kernel sp depending on where we came from  */
 	long orig_r0;
-	long orig_r8;	/*to distinguish bet excp, sys call, int1 or int2 */
+	/*to distinguish bet excp, syscall, irq */
+	unsigned long event_type:16, orig_r8:16;
 };
 
 /* Callee saved registers - need to be saved only when you are scheduled out */
@@ -117,12 +118,17 @@ struct user_regs_struct {
 /* return 1 if user mode or 0 if kernel mode */
 #define user_mode(regs) (regs->status32 & STATUS_U_MASK)
 
-
-/* return 1 if in syscall, 0 if Intr or Exception */
-#define in_syscall(regs) (((regs->orig_r8) >= 0 && \
-			   (regs->orig_r8 <= NR_syscalls)) ? 1 : 0)
+#define in_syscall(regs) (regs->orig_r8 & orig_r8_IS_SCALL)
+#define in_brkpt_trap(regs) (regs->orig_r8 & orig_r8_IS_BRKPT)
 
 #endif /* __ASSEMBLY__ */
+
+#define orig_r8_IS_SCALL		0x0001
+#define orig_r8_IS_SCALL_RESTARTED	0x0002
+#define orig_r8_IS_BRKPT		0x0004
+#define orig_r8_IS_EXCPN		0x0004
+#define orig_r8_IS_IRQ1			0x0010
+#define orig_r8_IS_IRQ2			0x0020
 
 #endif /* __KERNEL__ */
 
