@@ -121,7 +121,10 @@ struct user_regs_struct {
 #define in_syscall(regs) (regs->orig_r8 & orig_r8_IS_SCALL)
 #define in_brkpt_trap(regs) (regs->orig_r8 & orig_r8_IS_BRKPT)
 
-#endif /* __ASSEMBLY__ */
+#define syscall_wont_restart(regs) (regs->orig_r8 |= orig_r8_IS_SCALL_RESTARTED)
+#define syscall_restartable(regs) !(regs->orig_r8 & orig_r8_IS_SCALL_RESTARTED)
+
+#endif /* !__ASSEMBLY__ */
 
 #define orig_r8_IS_SCALL		0x0001
 #define orig_r8_IS_SCALL_RESTARTED	0x0002
