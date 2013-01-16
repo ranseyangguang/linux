@@ -83,6 +83,7 @@ menu "ARC Architecture Configuration"
 menu "ARC Platform/SoC/Board"
 
 source "arch/arc/plat-arcfpga/Kconfig"
+source "arch/arc/plat-tb100/Kconfig"
 #New platform adds here
 
 endmenu

@@ -87,6 +87,7 @@ core-y		+= arch/arc/
 core-y		+= arch/arc/boot/dtb/
 
 core-$(CONFIG_ARC_PLAT_FPGA_LEGACY)	+= arch/arc/plat-arcfpga/
+core-$(CONFIG_ARC_PLAT_TB100)		+= arch/arc/plat-tb100/
 
 drivers-$(CONFIG_OPROFILE)	+= arch/arc/oprofile/
 

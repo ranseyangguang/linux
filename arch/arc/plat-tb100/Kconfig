@@ -1,0 +1,28 @@
+# Abilis Systems: TB100 platform kernel configuration file
+# Copyright (C) 2008-2012 Christian Ruppert <christian.ruppert@abilis.com>
+
+menuconfig ARC_PLAT_TB100
+	bool "Abilis TB100"
+	help
+	  Support for platforms based on the TB100 home media gateway SOC by
+	  Abilis Systems.
+
+if ARC_PLAT_TB100
+
+config TB100_TUBE_CONSOLE
+	bool "Early console on htube"
+	default n
+	depends on EARLY_PRINTK && ARC_PLAT_TB100
+	help
+	  Early console on htube for VCS simulation.
+	  This functionality is only available in the Abilis RTL simulation
+	  environment. Physical implementations in Silicon or FPGA do not
+	  provide this type of console.
+	  Choose N unless you build this kernel for RTL simulation.
+
+config TB100_EARLY_CONSOLE_BAUD
+	int "early serial baud rate"
+	default "9600"
+	depends on EARLY_PRINTK && ARC_PLAT_TB100
+
+endif
