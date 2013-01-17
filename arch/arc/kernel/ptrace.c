@@ -132,10 +132,38 @@ long arch_ptrace(struct task_struct *child, long request,
 		 unsigned long addr, unsigned long data)
 {
 	int ret = -EIO;
+	unsigned int count, pos;
+	unsigned int __user *u_addr;
+	void *kbuf;
 
 	pr_debug("REQ=%ld: ADDR =0x%lx, DATA=0x%lx)\n", request, addr, data);
 
 	switch (request) {
+
+	case PTRACE_PEEKUSR:
+		pos = addr;	/* offset in struct user_regs_struct */
+		count = 4;	/* 1 register only */
+		u_addr = (unsigned int __user *)data;
+		kbuf = NULL;
+		ret = genregs_get(child, NULL, pos, count, kbuf, u_addr);
+		break;
+
+	case PTRACE_POKEUSR:
+		pos = addr;	/* offset in struct user_regs_struct */
+		count = 4;	/* 1 register only */
+
+		/* Ideally @data would have abeen a user space buffer, from
+		 * where, we do a copy_from_user.
+		 * However this request only involves one word, which courtesy
+		 * our ABI can be passed in a reg.
+		 * regset interface however expects some buffer to copyin from
+		 */
+		kbuf = &data;
+		u_addr = NULL;
+
+		ret = genregs_set(child, NULL, pos, count, kbuf, u_addr);
+		break;
+
 	default:
 		ret = ptrace_request(child, request, addr, data);
 		break;
