@@ -8,6 +8,23 @@
 
 /******** no-legacy-syscalls-ABI *******/
 
+/*
+ * Being uClibc based we need some of the deprecated syscalls:
+ * -Not emulated by uClibc at all
+ *	unlink, mkdir,... (needed by Busybox, LTP etc)
+ *	times (needed by LTP pan test harness)
+ * -Not emulated efficiently
+ *	select: emulated using pselect (but extra code to chk usec > 1sec)
+ *
+ * some (send/recv) correctly emulated using (recfrom/sendto) and
+ * some arch specific ones (fork/vfork)can easily be emulated using clone but
+ * thats the price of using common-denominator....
+ */
+#define __ARCH_WANT_SYSCALL_NO_AT
+#define __ARCH_WANT_SYSCALL_NO_FLAGS
+#define __ARCH_WANT_SYSCALL_OFF_T
+#define __ARCH_WANT_SYSCALL_DEPRECATED
+
 #define __ARCH_WANT_SYS_EXECVE
 #define __ARCH_WANT_SYS_CLONE
 #define __ARCH_WANT_SYS_VFORK
