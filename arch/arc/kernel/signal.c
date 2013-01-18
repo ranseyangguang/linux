@@ -57,12 +57,6 @@
 
 #define _BLOCKABLE (~(sigmask(SIGKILL) | sigmask(SIGSTOP)))
 
-asmlinkage int sys_sigaltstack(const stack_t __user *uss, stack_t __user *uoss)
-{
-	struct pt_regs *regs = task_pt_regs(current);
-	return do_sigaltstack(uss, uoss, regs->sp);
-}
-
 struct rt_sigframe {
 	struct siginfo info;
 	struct ucontext uc;
@@ -134,7 +128,7 @@ SYSCALL_DEFINE0(rt_sigreturn)
 		goto badframe;
 
 	if (unlikely(is_do_ss_needed(magic)))
-		if (do_sigaltstack(&sf->uc.uc_stack, NULL, regs->sp) == -EFAULT)
+		if (restore_altstack(&sf->uc.uc_stack))
 			goto badframe;
 
 	/* Don't restart from sigreturn */
@@ -193,7 +187,6 @@ setup_rt_frame(int signo, struct k_sigaction *ka, siginfo_t *info,
 {
 	struct rt_sigframe __user *sf;
 	unsigned int magic = 0;
-	stack_t stk;
 	int err = 0;
 
 	sf = get_sigframe(ka, regs, sizeof(struct rt_sigframe));
@@ -210,10 +203,7 @@ setup_rt_frame(int signo, struct k_sigaction *ka, siginfo_t *info,
 		err |= copy_siginfo_to_user(&sf->info, info);
 		err |= __put_user(0, &sf->uc.uc_flags);
 		err |= __put_user(NULL, &sf->uc.uc_link);
-		stk.ss_sp = (void __user *)current->sas_ss_sp;
-		stk.ss_flags = sas_ss_flags(regs->sp);
-		stk.ss_size = current->sas_ss_size;
-		err |= __copy_to_user(&sf->uc.uc_stack, &stk, sizeof(stk));
+		err |= __save_altstack(&sf->uc.uc_stack, regs->sp);
 
 		/* setup args 2 and 3 fo ruse rmode handler */
 		regs->r1 = (unsigned long)&sf->info;

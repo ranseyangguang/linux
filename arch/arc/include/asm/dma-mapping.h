@@ -12,6 +12,7 @@
 #define ASM_ARC_DMA_MAPPING_H
 
 #include <asm-generic/dma-coherent.h>
+#include <asm/cacheflush.h>
 #include <plat/dma_addr.h>
 
 void *dma_alloc_noncoherent(struct device *dev, size_t size,
