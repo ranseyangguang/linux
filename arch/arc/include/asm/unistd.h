@@ -8,7 +8,6 @@
 
 /******** no-legacy-syscalls-ABI *******/
 
-#define __ARCH_WANT_KERNEL_EXECVE
 #define __ARCH_WANT_SYS_EXECVE
 
 #define sys_mmap2 sys_mmap_pgoff

@@ -583,18 +583,8 @@ ARC_ENTRY ret_from_kernel_thread
 	bl  @schedule_tail
 	jl.d [r14]		; kernel_thread "payload"
 	mov  r0, r13		; arg to payload
-	j   @sys_exit
+	b    ret_from_exception
 ARC_EXIT ret_from_kernel_thread
-
-; When we land here, pt_regs have already been updated in-place correctly
-; for return to user mode.
-; However the call stack leading to kernel_execve() from say
-; ____call_usermodehelper() would make SP != pt_regs.
-; Thus we need to set SP to pt_regs as passed by kernel_execve() to us.
-ARC_ENTRY ret_from_kernel_execve
-	b.d   ret_from_exception
-	mov   sp, r0
-ARC_EXIT ret_from_kernel_execve
 
 ;################### Special Sys Call Wrappers ##########################
 
