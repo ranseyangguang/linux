@@ -137,6 +137,9 @@ SYSCALL_DEFINE0(rt_sigreturn)
 		if (do_sigaltstack(&sf->uc.uc_stack, NULL, regs->sp) == -EFAULT)
 			goto badframe;
 
+	/* Don't restart from sigreturn */
+	syscall_wont_restart(regs);
+
 	return regs->r0;
 
 badframe:
@@ -331,13 +334,13 @@ void do_signal(struct pt_regs *regs)
 
 	signr = get_signal_to_deliver(&info, &ka, regs, NULL);
 
-	/* Are we from a system call? */
-	restart_scall = in_syscall(regs);
+	restart_scall = in_syscall(regs) && syscall_restartable(regs);
 
 	if (signr > 0) {
-		if (restart_scall)
+		if (restart_scall) {
 			arc_restart_syscall(&ka, regs);
-
+			syscall_wont_restart(regs);	/* No more restarts */
+		}
 		handle_signal(signr, &ka, &info, regs);
 		return;
 	}
@@ -352,6 +355,7 @@ void do_signal(struct pt_regs *regs)
 			regs->r8 = __NR_restart_syscall;
 			regs->ret -= 4;
 		}
+		syscall_wont_restart(regs);	/* No more restarts */
 	}
 
 	/* If there's no signal to deliver, restore the saved sigmask back */
