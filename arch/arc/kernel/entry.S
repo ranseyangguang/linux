@@ -579,6 +579,13 @@ ARC_ENTRY ret_from_fork
 	b @ret_from_exception
 ARC_EXIT ret_from_fork
 
+ARC_ENTRY ret_from_kernel_thread
+	bl  @schedule_tail
+	jl.d [r14]		; kernel_thread "payload"
+	mov  r0, r13		; arg to payload
+	j   @sys_exit
+ARC_EXIT ret_from_kernel_thread
+
 ;################### Special Sys Call Wrappers ##########################
 
 ARC_ENTRY sys_execve_wrapper

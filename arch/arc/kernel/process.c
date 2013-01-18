@@ -142,34 +142,8 @@ void cpu_idle(void)
 	}
 }
 
-void kernel_thread_helper(void)
-{
-	__asm__ __volatile__(
-		"mov   r0, r2	\n\t"
-		"mov   r1, r3	\n\t"
-		"j     [r1]	\n\t");
-}
-
-int kernel_thread(int (*fn) (void *), void *arg, unsigned long flags)
-{
-	struct pt_regs regs;
-
-	memset(&regs, 0, sizeof(regs));
-
-	regs.r2 = (unsigned long)arg;
-	regs.r3 = (unsigned long)fn;
-	regs.blink = (unsigned long)do_exit;
-	regs.ret = (unsigned long)kernel_thread_helper;
-	regs.status32 = read_aux_reg(0xa);
-
-	/* Ok, create the new process.. */
-	return do_fork(flags | CLONE_VM | CLONE_UNTRACED, 0, &regs, 0, NULL,
-		       NULL);
-
-}
-EXPORT_SYMBOL(kernel_thread);
-
 asmlinkage void ret_from_fork(void);
+asmlinkage void ret_from_kernel_thread(void) __attribute__((noreturn));
 
 /* Layout of Child kernel mode stack as setup at the end of this function is
  *
@@ -202,7 +176,7 @@ asmlinkage void ret_from_fork(void);
  * ------------------  <===== END of PAGE
  */
 int copy_thread(unsigned long clone_flags,
-		unsigned long usp, unsigned long topstk,
+		unsigned long usp, unsigned long arg,
 		struct task_struct *p, struct pt_regs *regs)
 {
 	struct pt_regs *c_regs;        /* child's pt_regs */
@@ -216,27 +190,35 @@ int copy_thread(unsigned long clone_flags,
 	c_callee = ((struct callee_regs *)childksp) - 1;
 
 	/*
-	 * At the end of this function, kernel SP is all set for
-	 * switch_to to start unwinding.
-	 * For kernel threads we don't have callee regs, but the stack
-	 * layout nevertheless needs to remain the same
+	 * __switch_to() uses thread.ksp to start unwinding stack
+	 * For kernel threads we don't need to create callee regs, the
+	 * stack layout nevertheless needs to remain the same.
+	 * Also, since __switch_to anyways unwinds callee regs, we use
+	 * this to populate kernel thread entry-pt/args into callee regs,
+	 * so that ret_from_kernel_thread() becomes simpler.
 	 */
 	p->thread.ksp = (unsigned long)c_callee;	/* THREAD_KSP */
 
-	/* Copy parents pt regs on child's kernel mode stack */
-	*c_regs = *regs;
+	if (unlikely(p->flags & PF_KTHREAD)) {
+		memset(c_regs, 0, sizeof(struct pt_regs));
+
+		c_callee->r13 = arg; /* argument to kernel thread */
+		c_callee->r14 = usp;  /* function */
+
+		/* __switch_to expects FP(0), BLINK(return addr) at top */
+		childksp[0] = 0;			/* fp */
+		childksp[1] = (unsigned long)ret_from_kernel_thread; /* blink */
+		return 0;
+	}
+
+	/*--------- User Task Only --------------*/
 
 	/* __switch_to expects FP(0), BLINK(return addr) at top of stack */
 	childksp[0] = 0;				/* for POP fp */
 	childksp[1] = (unsigned long)ret_from_fork;	/* for POP blink */
 
-	if (!(user_mode(regs))) {
-		c_regs->sp =
-		    (unsigned long)task_thread_info(p) + (THREAD_SIZE - 4);
-		return 0;
-	}
-
-	/*--------- User Task Only --------------*/
+	/* Copy parents pt regs on child's kernel mode stack */
+	*c_regs = *regs;
 
 	c_regs->sp = usp;
 	c_regs->r0 = 0;		/* fork returns 0 in child */
