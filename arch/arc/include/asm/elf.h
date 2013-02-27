@@ -32,9 +32,10 @@
 typedef unsigned long elf_greg_t;
 
 
-/* core dump regs is in the order pt_regs, callee_regs, stop_pc (for gdb) */
+/* pt_regs, callee_regs, efa, stop_pc */
 #define ELF_NGREG	((sizeof(struct pt_regs) + sizeof(struct callee_regs) \
-			  + sizeof(unsigned long)) / sizeof(elf_greg_t))
+			  + sizeof(unsigned long) + sizeof(unsigned long)) \
+			  / sizeof(elf_greg_t))
 
 typedef elf_greg_t elf_gregset_t[ELF_NGREG];
 
